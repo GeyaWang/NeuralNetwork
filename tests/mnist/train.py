@@ -26,7 +26,7 @@ def main():
     model.summary()
     model.compile(Adam(), CrossEntropy())
 
-    model.fit(x_train, y_train, batch_size=32, running_mean_err=1000)
+    model.fit(x_train, y_train, batch_size=32, running_mean_err=100)
 
     model.save('mnist_training')
 
