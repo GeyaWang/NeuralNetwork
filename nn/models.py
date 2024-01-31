@@ -1,7 +1,7 @@
 from copy import deepcopy
 from .utils.progess_bar import ProgressBar
-from .utils.graph import Graph, Plot
 from .template import Layer, Optimiser, Loss, TrainableLayer, TrainingOnlyLayer
+from matplotlib import pyplot as plt
 import numpy as np
 from typing import Literal
 from collections import deque
@@ -117,7 +117,7 @@ class Sequential:
 
         return error
 
-    def fit(self, x: np.ndarray, y: np.ndarray, batch_size: int = 1, verbose: Literal[0, 1] = 1, running_mean_err: int = 1):
+    def fit(self, x: np.ndarray, y: np.ndarray, batch_size: int = 1, verbose: Literal[0, 1] = 1, graph: Literal[0, 1, 2] = 0, graph_filepath: str = 'graph', running_mean_err: int = 1):
         """Train over batch of input data"""
 
         assert x.shape[0] == y.shape[0], 'Input and output data must have the same batch size'
@@ -134,25 +134,39 @@ class Sequential:
 
             iter_ = progress_bar(range(total_batches // batch_size))
         else:  # verbose == 0
-            progress_bar = None
-            err_list = None
-            prefix_len = None
-            total_batches_round = None
-            progress_bar.prefix = None
-
             iter_ = range(total_batches // batch_size)
+
+        if graph != 0:
+            x_plot = []
+            err_plot = []
+            err_mean_plot = []
 
         for i in iter_:
             low = i * batch_size
             high = low + batch_size
             err = self.train_step(x[low: high], y[low: high])
+            err_list.append(err)
+            err_mean = np.mean(err_list)
+
+            if graph != 0:
+                x_plot.append(high)
+                err_plot.append(err)
+                err_mean_plot.append(err_mean)
 
             if verbose == 1:
-                err_list.append(err)
-                err_mean = np.mean(err_list)
-
                 progress_bar.prefix = f'{high}/{total_batches_round} '.rjust(prefix_len)
                 progress_bar.suffix = f' - loss: {err_mean:.4f}'
+
+        if graph != 0:
+            plt.plot(x_plot, err_plot, label='error')
+            plt.plot(x_plot, err_mean_plot, label='mean error')
+            plt.xlabel('Epoch')
+            plt.legend()
+
+            if graph == 1:
+                plt.show()
+            else:  # graph == 2
+                plt.savefig(graph_filepath)
 
     def clone(self):
         """Returns deep copy of self"""

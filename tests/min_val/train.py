@@ -6,7 +6,7 @@ from nn.losses import CrossEntropy
 import numpy as np
 
 
-BATCH_SIZE = 100000
+BATCH_SIZE = 1000000
 SAMPLES = 5
 
 
@@ -24,7 +24,7 @@ def main():
     x_train = np.random.uniform(-1, 1, (BATCH_SIZE, SAMPLES))
     y_train = np.array(np.equal(np.repeat(np.min(x_train, axis=-1), SAMPLES).reshape(BATCH_SIZE, SAMPLES), x_train), dtype=np.float32)
 
-    model.fit(x_train, y_train, batch_size=16, running_mean_err=50, show_graph=True)
+    model.fit(x_train, y_train, batch_size=32, running_mean_err=100, graph=2)
 
     model.save('training.ptd')
 
