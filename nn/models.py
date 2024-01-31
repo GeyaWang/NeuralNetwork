@@ -1,12 +1,12 @@
 from copy import deepcopy
 from .utils.progess_bar import ProgressBar
+from .utils.graph import Graph, Plot
 from .template import Layer, Optimiser, Loss, TrainableLayer, TrainingOnlyLayer
 import numpy as np
 from typing import Literal
 from collections import deque
 import os
 import pickle
-import matplotlib.pyplot as plt
 
 FILE_EXTENSION = 'ptd'
 
@@ -99,7 +99,6 @@ class Sequential:
     def train_step(self, x: np.ndarray, y: np.ndarray):
         assert self.optimiser is not None and self.loss is not None, 'Model must be compiled before training'
 
-        error = None
         try:
             # forward propagation
             y_pred = self.forward_propagation(x)
@@ -128,7 +127,7 @@ class Sequential:
         if verbose == 1:
             # show progress bar
             progress_bar = ProgressBar()
-            error_list = deque(maxlen=running_mean_err)
+            err_list = deque(maxlen=running_mean_err)
             prefix_len = len(str(total_batches)) * 2 + 2
             total_batches_round = (total_batches // batch_size) * batch_size
             progress_bar.prefix = f'0/{total_batches_round} '.rjust(prefix_len)
@@ -136,7 +135,7 @@ class Sequential:
             iter_ = progress_bar(range(total_batches // batch_size))
         else:  # verbose == 0
             progress_bar = None
-            error_list = None
+            err_list = None
             prefix_len = None
             total_batches_round = None
             progress_bar.prefix = None
@@ -146,14 +145,14 @@ class Sequential:
         for i in iter_:
             low = i * batch_size
             high = low + batch_size
-            error = self.train_step(x[low: high], y[low: high])
+            err = self.train_step(x[low: high], y[low: high])
 
             if verbose == 1:
-                error_list.append(error)
-                error_mean = np.mean(error_list)
+                err_list.append(err)
+                err_mean = np.mean(err_list)
 
                 progress_bar.prefix = f'{high}/{total_batches_round} '.rjust(prefix_len)
-                progress_bar.suffix = f' - loss: {error_mean:.4f}'
+                progress_bar.suffix = f' - loss: {err_mean:.4f}'
 
     def clone(self):
         """Returns deep copy of self"""
