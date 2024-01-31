@@ -25,13 +25,13 @@ class SoftMax(ActivationLayer):
     def func_prime(self, Y):
         _, n = Y.shape
         tmp = np.repeat(Y[:, :, np.newaxis], n, axis=2)
-        return tmp * (np.identity(n) - tmp)
+        return tmp.transpose(0, 2, 1) * (np.identity(n) - tmp)
 
     def forward(self, X):
         self.cached_output = self.func(X)
         return self.cached_output
 
     def backward(self, dY):
-        batches, _ = self.cached_output.shape
-        dX = np.einsum('ijk,ik->ij', self.func_prime(self.cached_output), dY)
+        tmp = self.func_prime(self.cached_output)
+        dX = np.einsum('ijk,ik->ij', tmp, dY)
         return dX

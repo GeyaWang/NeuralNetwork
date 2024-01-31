@@ -103,13 +103,11 @@ class Conv2D(TrainableLayer):
         self.cached_X_pad = None
 
     @staticmethod
-    def pad_arr(x, padding, pad):
-        match padding:
-            case 'same':
-                y = np.pad(x, ((0, 0), (pad[0], pad[0]), (pad[1], pad[1]), (0, 0)), 'constant', constant_values=0)
-            case _:
-                y = x
-        return y
+    def zero_pad(x, pad):
+        if pad == (0, 0):
+            return x
+
+        return np.pad(x, ((0, 0), (pad[0], pad[0]), (pad[1], pad[1]), (0, 0)), 'constant', constant_values=0)
 
     def forward(self, X):
         self.cached_X = X
@@ -117,13 +115,15 @@ class Conv2D(TrainableLayer):
         N, _, _, C1, = X.shape
         H2, W2, C2 = self.output_shape
 
+        X_pad = self.zero_pad(X, self.pad)
+
         # initiate output
         Y = np.zeros((N, H2, W2, C2))
 
         for n in range(N):
             for c2 in range(C2):
                 for c1 in range(C1):
-                    Y[n, :, :, c2] += correlate2d(X[n, :, :, c1], self.weights[:, :, c1, c2], mode=self.padding)
+                    Y[n, :, :, c2] += correlate2d(X_pad[n, :, :, c1], self.weights[:, :, c1, c2], mode='valid')
         return Y
 
     def backward(self, dY):
@@ -132,7 +132,14 @@ class Conv2D(TrainableLayer):
         dX = np.zeros(self.cached_X.shape)
 
         N, _, _, C1, = self.cached_X.shape
-        _, _, C2 = self.output_shape
+        k1, k2, _, C2 = self.weights.shape
+
+        full_pad = (k1 - 1, k2 - 1)
+        same_pad = (k1 // 2, k2 // 2)
+
+        dY_pad_full = self.zero_pad(dY, full_pad)
+        dY_pad_same = self.zero_pad(dY, same_pad)
+        cached_X_pad = self.zero_pad(self.cached_X, self.pad)
 
         for n in range(N):
             for c2 in range(C2):
@@ -140,11 +147,11 @@ class Conv2D(TrainableLayer):
 
                 for c1 in range(C1):
                     if self.padding == 'valid':
-                        dX[n, :, :, c1] += convolve2d(dY[n, :, :, c2], self.weights[:, :, c1, c2], mode='full')
+                        dX[n, :, :, c1] += convolve2d(dY_pad_full[n, :, :, c2], self.weights[:, :, c1, c2], mode='valid')
                         dW[:, :, c1, c2] += correlate2d(self.cached_X[n, :, :, c1], dY[n, :, :, c2], mode='valid')
                     elif self.padding == 'same':
-                        dX[n, :, :, c1] += convolve2d(dY[n, :, :, c2], self.weights[:, :, c1, c2], mode='same')
-                        dW[:, :, c1, c2] += correlate2d(self.pad_arr(self.cached_X, self.padding, self.pad)[n, :, :, c1], dY[n, :, :, c2], mode='valid')
+                        dX[n, :, :, c1] += convolve2d(dY_pad_same[n, :, :, c2], self.weights[:, :, c1, c2], mode='valid')
+                        dW[:, :, c1, c2] += correlate2d(cached_X_pad[n, :, :, c1], dY[n, :, :, c2], mode='valid')
 
         # update parameters
         self.optimiser.update_params(self.weights, dW)
