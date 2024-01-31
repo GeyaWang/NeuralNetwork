@@ -1,6 +1,6 @@
 import mnist
 from nn.models import Sequential
-from nn.layers import Dense, Conv2D, Flatten, Activation
+from nn.layers import Dense, Conv2D, Flatten, Activation, Dropout
 from nn.activations import ReLU, SoftMax
 from nn.losses import CrossEntropy
 from nn.optimisers import Adam
@@ -11,7 +11,7 @@ def main():
     x, y, x_test, y_test = mnist.mnist('MNIST')
     n, H, W = x.shape
 
-    x_train = np.reshape(x, (n, H, W, 1)) / 255
+    x_train = np.reshape(x, (n, H, W, 1))
     y_train = np.eye(10)[y]
 
     model = Sequential()
@@ -20,6 +20,7 @@ def main():
     model.add(Conv2D(32, 3))
     model.add(Activation(ReLU()))
     model.add(Flatten())
+    model.add(Dropout(0.5))
     model.add(Dense(10))
     model.add(Activation(SoftMax()))
     model.summary()
@@ -27,7 +28,7 @@ def main():
 
     model.fit(x_train, y_train, batch_size=32, running_mean_err=1000)
 
-    model.save('training')
+    model.save('mnist_training')
 
 
 if __name__ == '__main__':
