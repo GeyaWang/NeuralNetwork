@@ -203,7 +203,7 @@ class Dropout(TrainingOnlyLayer):
         self.cached_X_mask = None
 
     def forward(self, X):
-        self.cached_X_mask = np.random.rand(X.shape) < (1 - self.p)
+        self.cached_X_mask = np.random.rand(*X.shape) < (1 - self.p)
         return (X * self.cached_X_mask) / (1 - self.p)
 
     def backward(self, dY):
