@@ -53,8 +53,8 @@ class Dense(TrainableLayer):
         kernel_shape = (self.input_shape[0], self.output_shape[0])
         bias_shape = self.output_shape[0]
 
-        fan_in = self.input_shape[0]
-        fan_out = self.output_shape[0]
+        fan_in = np.prod(self.input_shape)
+        fan_out = np.prod(self.output_shape)
 
         self.weights = self.kernel_initializer(kernel_shape, fan_in=fan_in, fan_out=fan_out)
         self.bias = self.bias_initializer(bias_shape, fan_in=fan_in, fan_out=fan_out)
