@@ -14,10 +14,10 @@ class MeanSquaredError(Loss):
 
 
 class CrossEntropy(Loss):
-    @staticmethod
-    def func(y_true, y_pred):
-        return float(np.sum(-y_true * np.log10(y_pred)))
+    epsilon = 1e-10
 
-    @staticmethod
-    def func_prime(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
-        return -(y_true / y_pred)
+    def func(self, y_true, y_pred):
+        return float(np.sum(-y_true * np.log10(y_pred + self.epsilon)))
+
+    def func_prime(self, y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
+        return -(y_true / (y_pred + self.epsilon))
