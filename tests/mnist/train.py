@@ -5,7 +5,6 @@ from nn.layers import Dense, Conv2D, Flatten, Activation
 from nn.activations import ReLU, SoftMax
 from nn.losses import CrossEntropy
 from nn.optimisers import Adam
-import numpy as np
 
 
 def main():
