@@ -44,7 +44,7 @@ class Sequential:
     def summary(self):
         """Prints tabular summary of model"""
 
-        column_size = 20
+        column_size = 30
         header = ["Layer (type)", "Output size", "Param #"]
 
         separator1 = '-' * column_size * len(header)
