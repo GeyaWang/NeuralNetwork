@@ -6,6 +6,7 @@ from typing import Literal
 from collections import deque
 import os
 import pickle
+import matplotlib.pyplot as plt
 
 FILE_EXTENSION = 'ptd'
 
@@ -130,24 +131,29 @@ class Sequential:
             error_list = deque(maxlen=running_mean_err)
             prefix_len = len(str(total_batches)) * 2 + 2
             total_batches_round = (total_batches // batch_size) * batch_size
-
             progress_bar.prefix = f'0/{total_batches_round} '.rjust(prefix_len)
 
-            for i in progress_bar(range(total_batches // batch_size)):
-                low = i * batch_size
-                high = low + batch_size
-                error = self.train_step(x[low: high], y[low: high])
+            iter_ = progress_bar(range(total_batches // batch_size))
+        else:  # verbose == 0
+            progress_bar = None
+            error_list = None
+            prefix_len = None
+            total_batches_round = None
+            progress_bar.prefix = None
+
+            iter_ = range(total_batches // batch_size)
+
+        for i in iter_:
+            low = i * batch_size
+            high = low + batch_size
+            error = self.train_step(x[low: high], y[low: high])
+
+            if verbose == 1:
                 error_list.append(error)
+                error_mean = np.mean(error_list)
 
                 progress_bar.prefix = f'{high}/{total_batches_round} '.rjust(prefix_len)
-                progress_bar.suffix = f' - loss: {np.mean(error_list):.4f}'
-        else:
-            # exclude progress bar
-            for i in range(total_batches // batch_size):
-                low = i * batch_size
-                high = low + batch_size
-
-                self.train_step(x[low: high], y[low: high])
+                progress_bar.suffix = f' - loss: {error_mean:.4f}'
 
     def clone(self):
         """Returns deep copy of self"""
