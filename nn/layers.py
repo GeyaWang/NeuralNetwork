@@ -195,8 +195,16 @@ class Flatten(Layer):
 
 
 class Dropout(TrainingOnlyLayer):
+    def __init__(self, p: float):
+        super().__init__()
+
+        self.p = p
+
+        self.cached_X_mask = None
+
     def forward(self, X):
-        pass
+        self.cached_X_mask = np.random.rand(X.shape) < (1 - self.p)
+        return (X * self.cached_X_mask) / (1 - self.p)
 
     def backward(self, dY):
-        pass
+        return (dY * self.cached_X_mask) / (1 - self.p)
