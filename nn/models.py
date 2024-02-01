@@ -204,7 +204,7 @@ class Sequential:
 
         layers = model_data["layers"]
 
-        if verbose == 0:
+        if verbose == 1:
             print(f'Successfully loaded file from {filepath}')
 
         return Sequential(layers=layers)
