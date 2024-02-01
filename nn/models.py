@@ -140,7 +140,6 @@ class Sequential:
         err_plot = []
         err_mean_plot = []
 
-        prefix_len = len(str(total_batches)) * 2 + 2
         total_batches_round = (total_batches // batch_size) * batch_size
 
         for epoch in range(epochs):
@@ -148,13 +147,16 @@ class Sequential:
             zip_ = list(zip(x, y))
             random.shuffle(zip_)
             x_train, y_train = zip(*zip_)
+            x_train = np.array(x_train)
+            y_train = np.array(y_train)
 
             progress_bar = ProgressBar()
-            progress_bar.prefix = f'0/{total_batches_round} '.rjust(prefix_len)
+            progress_bar.prefix = f'Epoch: {epoch} - 0/{total_batches_round} '
 
             if verbose == 1:
                 # iterate through progress bar
                 iter_ = progress_bar(range(total_batches // batch_size))
+                print()  # new line
             else:  # verbose == 0
                 iter_ = range(total_batches // batch_size)
 
@@ -170,7 +172,7 @@ class Sequential:
                     err_mean_plot.append(err_mean)
 
                 if verbose == 1:
-                    progress_bar.prefix = f'Epoch: {3} - {high}/{total_batches_round} '.rjust(prefix_len)
+                    progress_bar.prefix = f'Epoch: {epoch} - {high}/{total_batches_round} '
                     progress_bar.suffix = f' - loss: {err_mean:.4f}'
 
             # save model
