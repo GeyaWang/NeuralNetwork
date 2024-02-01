@@ -1,3 +1,4 @@
+import random
 from copy import deepcopy
 from .utils.progess_bar import ProgressBar
 from .template import Layer, Optimiser, Loss, TrainableLayer, TrainingOnlyLayer
@@ -117,50 +118,69 @@ class Sequential:
 
         return error
 
-    def fit(self, x: np.ndarray, y: np.ndarray, batch_size: int = 1, verbose: Literal[0, 1] = 1, graph: Literal[0, 1, 2] = 0, graph_filepath: str = 'graph', running_mean_err: int = 1):
+    def fit(
+            self,
+            x: np.ndarray,
+            y: np.ndarray,
+            batch_size: int = 1,
+            epochs: int = 1,
+            verbose: Literal[0, 1] = 1,
+            graph: Literal[0, 1, 2] = 0,
+            graph_filepath: str = 'graph',
+            running_mean_err: int = 1,
+            save_filepath: str = None
+    ):
         """Train over batch of input data"""
 
         assert x.shape[0] == y.shape[0], 'Input and output data must have the same batch size'
         total_batches = x.shape[0]
 
-        # train batches
-        if verbose == 1:
-            # show progress bar
+        # init variables
+        err_list = deque(maxlen=running_mean_err)
+        err_plot = []
+        err_mean_plot = []
+
+        prefix_len = len(str(total_batches)) * 2 + 2
+        total_batches_round = (total_batches // batch_size) * batch_size
+
+        for epoch in range(epochs):
+            # shuffle training_data
+            zip_ = list(zip(x, y))
+            random.shuffle(zip_)
+            x_train, y_train = zip(*zip_)
+
             progress_bar = ProgressBar()
-            err_list = deque(maxlen=running_mean_err)
-            prefix_len = len(str(total_batches)) * 2 + 2
-            total_batches_round = (total_batches // batch_size) * batch_size
             progress_bar.prefix = f'0/{total_batches_round} '.rjust(prefix_len)
 
-            iter_ = progress_bar(range(total_batches // batch_size))
-        else:  # verbose == 0
-            iter_ = range(total_batches // batch_size)
-
-        if graph != 0:
-            x_plot = []
-            err_plot = []
-            err_mean_plot = []
-
-        for i in iter_:
-            low = i * batch_size
-            high = low + batch_size
-            err = self.train_step(x[low: high], y[low: high])
-            err_list.append(err)
-            err_mean = np.mean(err_list)
-
-            if graph != 0:
-                x_plot.append(high)
-                err_plot.append(err)
-                err_mean_plot.append(err_mean)
-
             if verbose == 1:
-                progress_bar.prefix = f'{high}/{total_batches_round} '.rjust(prefix_len)
-                progress_bar.suffix = f' - loss: {err_mean:.4f}'
+                # iterate through progress bar
+                iter_ = progress_bar(range(total_batches // batch_size))
+            else:  # verbose == 0
+                iter_ = range(total_batches // batch_size)
+
+            for i in iter_:
+                low = i * batch_size
+                high = low + batch_size
+                err = self.train_step(x_train[low: high], y_train[low: high])
+                err_list.append(err)
+                err_mean = np.mean(err_list)
+
+                if graph != 0:
+                    err_plot.append(err)
+                    err_mean_plot.append(err_mean)
+
+                if verbose == 1:
+                    progress_bar.prefix = f'Epoch: {3} - {high}/{total_batches_round} '.rjust(prefix_len)
+                    progress_bar.suffix = f' - loss: {err_mean:.4f}'
+
+            # save model
+            if save_filepath is not None:
+                self.save(save_filepath, verbose=verbose)
 
         if graph != 0:
+            x_plot = [i * batch_size for i in range(len(err_plot))]
             plt.plot(x_plot, err_plot, label='error')
             plt.plot(x_plot, err_mean_plot, label='mean error')
-            plt.xlabel('Epoch')
             plt.legend()
 
             if graph == 1:
