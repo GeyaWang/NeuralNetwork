@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools", "wheel", "nn"]
+requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
@@ -15,3 +15,6 @@ authors = [{name = "Geya Wang", email = "geyaewang@gmail.com"}]
 
 [project.urls]
 Repository = "https://github.com/GeyaWang/NeuralNetwork.git"
+
+[project.scripts]
+nn = "nn"
