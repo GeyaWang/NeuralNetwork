@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 requires-python = ">=3.10.0"
-name = "neuralnetwork"
+name = "py-nn"
 version = "0.1.0"
 description = "Neural network created from scratch inspired by keras."
 authors = [{name = "Geya Wang", email = "geyaewang@gmail.com"}]
 
 [project.urls]
-Repository = "https://github.com/GeyaWang/neuralnetwork.git"
+Repository = "https://github.com/GeyaWang/py-nn.git"
