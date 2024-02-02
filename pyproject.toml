@@ -1,0 +1,12 @@
+[build-system]
+requires = ["numpy", "scipy", "matplotlib"]
+
+[project]
+requires-python = ">=3.10.0"
+name = ["nn"]
+version = "0.1.0"
+description = "Neural network created from scratch inspired by keras."
+authors = [{name = "Geya Wang", email = "geyaewang@gmail.com"}]
+
+[project.urls]
+Repository = "https://github.com/GeyaWang/NeuralNetwork.git"
