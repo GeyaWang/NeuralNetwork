@@ -1,4 +1,4 @@
-from .template import Optimiser
+from ._template import Optimiser
 import numpy as np
 
 

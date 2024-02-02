@@ -1,5 +1,5 @@
-from .template import Initialise
-from .parameter import Parameter
+from ._template import Initialise
+from ._parameter import Parameter
 import numpy as np
 
 

@@ -1,4 +1,4 @@
-from .template import Layer, TrainableLayer, TrainingOnlyLayer, Initialise
+from ._template import Layer, TrainableLayer, TrainingOnlyLayer, Initialise
 from .initializers import GlorotUniform, Zeros
 import numpy as np
 from typing import Literal

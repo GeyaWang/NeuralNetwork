@@ -1,5 +1,5 @@
 import numpy as np
-from .template import ActivationLayer
+from ._template import ActivationLayer
 
 
 class ReLU(ActivationLayer):

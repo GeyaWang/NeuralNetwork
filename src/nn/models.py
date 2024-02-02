@@ -1,7 +1,7 @@
 import random
 from copy import deepcopy
 from .utils.progess_bar import ProgressBar
-from .template import Layer, Optimiser, Loss, TrainableLayer, TrainingOnlyLayer
+from ._template import Layer, Optimiser, Loss, TrainableLayer, TrainingOnlyLayer
 from matplotlib import pyplot as plt
 import numpy as np
 from typing import Literal
