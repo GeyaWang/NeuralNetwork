@@ -1,5 +1,6 @@
 [build-system]
-requires = ["numpy", "scipy", "matplotlib"]
+requires = ["numpy", "scipy", "matplotlib", "setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [project]
 requires-python = ">=3.10.0"
