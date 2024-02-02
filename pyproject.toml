@@ -17,4 +17,4 @@ authors = [{name = "Geya Wang", email = "geyaewang@gmail.com"}]
 Repository = "https://github.com/GeyaWang/NeuralNetwork.git"
 
 [project.scripts]
-nn = "nn"
+nn = "nn.models"
