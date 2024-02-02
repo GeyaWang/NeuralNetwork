@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools", "wheel", "numpy", "scipy", "matplotlib"]
+requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
@@ -7,6 +7,7 @@ py-modules = []
 
 [project]
 requires-python = ">=3.10.0"
+dependencies= ["numpy", "scipy", "matplotlib"]
 name = "py-nn"
 version = "0.1.0"
 description = "Neural network created from scratch inspired by keras."
