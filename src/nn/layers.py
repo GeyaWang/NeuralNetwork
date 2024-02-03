@@ -70,7 +70,6 @@ class Conv2D(TrainableLayer):
             filters,
             kernel_size: int | tuple[int, int],
             input_shape: tuple[int, int, int] = None,
-            strides=(1, 1),
             padding: Literal['valid', 'same'] = 'valid',
             kernel_initializer: Initialise = GlorotUniform(),
             bias_initializer: Initialise = Zeros()
@@ -88,7 +87,6 @@ class Conv2D(TrainableLayer):
             self.pad = (self.kernel_size[0] // 2, self.kernel_size[1] // 2)
 
         self.filters = filters
-        self.strides = strides
         self.padding = padding
 
         self.weights = None
@@ -159,8 +157,8 @@ class Conv2D(TrainableLayer):
 
     @property
     def output_shape(self):
-        height = (self.input_shape[0] - self.kernel_size[0] + 2 * self.pad[0]) // self.strides[0] + 1
-        width = (self.input_shape[1] - self.kernel_size[1] + 2 * self.pad[1]) // self.strides[1] + 1
+        height = self.input_shape[0] - self.kernel_size[0] + 2 * self.pad[0] + 1
+        width = self.input_shape[1] - self.kernel_size[1] + 2 * self.pad[1] + 1
         return height, width, self.filters
 
 
