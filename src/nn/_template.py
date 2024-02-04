@@ -38,11 +38,11 @@ class Layer(ABC):
             self.display = self.__class__.__name__
 
     @abstractmethod
-    def forward(self, X, **kwargs) -> np.ndarray:
+    def forward(self, X) -> np.ndarray:
         pass
 
     @abstractmethod
-    def backward(self, dY, **kwargs) -> np.ndarray:
+    def backward(self, dY) -> np.ndarray:
         pass
 
 
@@ -83,9 +83,9 @@ class ActivationLayer(Layer, ABC):
     def func_prime(self, X: np.ndarray) -> np.ndarray:
         pass
 
-    def forward(self, X, **kwargs) -> np.ndarray:
+    def forward(self, X) -> np.ndarray:
         self.cached_input = X
         return self.func(X)
 
-    def backward(self, dY, **kwargs) -> np.ndarray:
+    def backward(self, dY) -> np.ndarray:
         return dY * self.func_prime(self.cached_input)
