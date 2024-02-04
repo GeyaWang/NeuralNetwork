@@ -6,12 +6,21 @@ class ProgressBar:
         self.prefix = prefix
         self.suffix = suffix
 
-    def _print(self, i, total):
+    def _print(self, i: int, total: int):
         percent = ("{0:." + str(self.decimals) + "f}").format(100 * (i / float(total)))
-        filledLength = int(self.length * i // total)
+        filledLength = self.length * i // total
         bar = self.fill * filledLength + '-' * (self.length - filledLength)
 
         print(f'\r{self.prefix}|{bar}| {percent}%{self.suffix}', end='')
+
+    def set_end_txt(self, prefix: str = None, suffix: str = None):
+        if prefix is None:
+            prefix = self.prefix
+
+        if suffix is None:
+            suffix = self.suffix
+
+        print(f'\r{prefix}|{self.fill * self.length}| 100.0%{suffix}', end='')
 
     def __call__(self, iterable, prefix: str = ' ', suffix: str = ''):
         total = len(iterable)
@@ -21,5 +30,3 @@ class ProgressBar:
 
             yield val
             self._print(i + 1, total)
-
-        print()
