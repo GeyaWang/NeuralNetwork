@@ -38,11 +38,11 @@ class Layer(ABC):
             self.display = self.__class__.__name__
 
     @abstractmethod
-    def forward(self, X) -> np.ndarray:
+    def forward(self, X, **kwargs) -> np.ndarray:
         pass
 
     @abstractmethod
-    def backward(self, dY) -> np.ndarray:
+    def backward(self, dY, **kwargs) -> np.ndarray:
         pass
 
 
