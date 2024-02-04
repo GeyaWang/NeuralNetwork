@@ -191,6 +191,7 @@ class Sequential:
             if verbose == 1:
                 epoch_time = time.perf_counter() - epoch_start_time
                 progress_bar.set_end_txt(suffix=f' - {epoch_time:.1f}s {epoch_time / total_steps_round:.1f}s/step - loss: {err_mean:.4f}')
+                print()
 
             # save model
             if save_filepath is not None:
