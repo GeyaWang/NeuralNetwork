@@ -9,6 +9,8 @@ from collections import deque
 import time
 import os
 import pickle
+import sys
+from multiprocessing import Pool
 
 FILE_EXTENSION = 'ptd'
 
@@ -111,13 +113,9 @@ class Sequential:
 
             # backward propagation
             self.backward_propagation(dY)
-
+            return error
         except KeyboardInterrupt:
-            print('\n\nForcefully shut down by user')
-            from sys import exit
-            exit()
-
-        return error
+            pass
 
     def fit(
             self,
@@ -129,7 +127,8 @@ class Sequential:
             graph: Literal[0, 1, 2] = 0,
             graph_filepath: str = 'graph',
             running_mean_err: int = 100,
-            save_filepath: str = None
+            save_filepath: str = None,
+            processes: int = 1
     ):
         """Train over batch of input data"""
 
@@ -137,13 +136,13 @@ class Sequential:
         total_steps = x.shape[0]
 
         # init variables
-        errs = deque(maxlen=running_mean_err)
-        times = deque(maxlen=running_mean_err)
+        err_list = deque(maxlen=running_mean_err)
+        time_list = deque(maxlen=running_mean_err)
         err_mean = None
         err_plot = []
         err_mean_plot = []
 
-        total_steps_round = (total_steps // batch_size) * batch_size
+        total_steps_round = (total_steps // (batch_size * processes)) * batch_size * processes
 
         for epoch in range(epochs):
             # shuffle training_data
@@ -160,33 +159,46 @@ class Sequential:
 
             if verbose == 1:
                 # iterate through progress bar
-                iter_ = progress_bar(range(total_steps // batch_size))
+                iter_ = progress_bar(range(total_steps // (batch_size * processes)))
                 print()  # new line
             else:  # verbose == 0
-                iter_ = range(total_steps // batch_size)
+                iter_ = range(total_steps // (batch_size * processes))
 
             for i in iter_:
-                low = i * batch_size
-                high = low + batch_size
+                step = (i + 1) * batch_size * processes
 
+                # use multiprocessing to process batches, record time
                 t1 = time.perf_counter()
-                err = self.train_step(x_train[low: high], y_train[low: high])
+                try:
+
+                    # if more than one process, use multiprocessing
+                    if processes > 1:
+                        args = [(x_train[(i + n) * batch_size: (i + n + 1) * batch_size], y_train[(i + n) * batch_size: (i + n + 1) * batch_size]) for n in range(processes)]
+                        with Pool(processes) as p:
+                            errs = p.starmap(self.train_step, args)
+                    else:
+                        errs = [self.train_step(x_train[i * batch_size: (i + 1) * batch_size], y_train[i * batch_size: (i + 1) * batch_size])]
+
+                # catch keyboard interrupt
+                except KeyboardInterrupt:
+                    print('\n\nForcefully shut down by user')
+                    sys.exit()
                 t2 = time.perf_counter()
 
                 # save data
-                times.append(t2 - t1)
-                time_mean = np.mean(times)
-                errs.append(err)
-                err_mean = np.mean(errs)
+                time_list.append(t2 - t1)
+                time_mean = np.mean(time_list)
+                err_list.extend(errs)
+                err_mean = np.mean(err_list)
 
                 if graph != 0:
-                    err_plot.append(err)
+                    err_plot.extend(errs)
                     err_mean_plot.append(err_mean)
 
                 # display data
                 if verbose == 1:
-                    progress_bar.prefix = f'Epoch: {epoch} - {high}/{total_steps_round} '
-                    progress_bar.suffix = f' - ETA: {(total_steps_round - high) * time_mean / batch_size:.1f}s - loss: {err_mean:.4f}'
+                    progress_bar.prefix = f'Epoch: {epoch} - {step}/{total_steps_round} '
+                    progress_bar.suffix = f' - ETA: {(total_steps_round - step) * time_mean / (batch_size * processes):.1f}s - loss: {err_mean:.4f}'
 
             # display epoch data
             if verbose == 1:
