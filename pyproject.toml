@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 requires-python = ">=3.10.0"
 dependencies = ["numpy", "matplotlib", "scipy"]
 name = "py-nn"
-version = "0.1.3"
+version = "0.1.4"
 description = "Neural network created from scratch inspired by keras."
 authors = [{name = "Geya Wang", email = "geyaewang@gmail.com"}]
 
