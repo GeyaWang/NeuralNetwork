@@ -111,6 +111,8 @@ class Conv2D(TrainableLayer):
 
         for n in range(N):
             for c2 in range(C2):
+                Y += self.bias[c2]
+
                 for c1 in range(C1):
                     Y[n, :, :, c2] += correlate2d(X[n, :, :, c1], self.weights[:, :, c1, c2], mode=self.padding)
         return Y
