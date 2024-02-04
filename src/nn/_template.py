@@ -87,5 +87,5 @@ class ActivationLayer(Layer, ABC):
         self.cached_input = X
         return self.func(X)
 
-    def backward(self, dY, ) -> np.ndarray:
+    def backward(self, dY, **kwargs) -> np.ndarray:
         return dY * self.func_prime(self.cached_input)
