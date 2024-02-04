@@ -39,6 +39,7 @@ class Dense(TrainableLayer):
         return np.dot(X, self.weights) + self.bias
 
     def backward(self, dY):
+        # calculate error gradients
         dW = np.dot(self.cached_X.T, dY)  # dE/dW = X.T * dE/dY
         dB = np.sum(dY, axis=0)  # dE/dB = dE/dY
         dX = np.dot(dY, self.weights.T)  # dE/dX = dE/dY * W.T
@@ -111,8 +112,10 @@ class Conv2D(TrainableLayer):
 
         for n in range(N):
             for c2 in range(C2):
-                Y += self.bias[c2]
+                # add bias
+                Y[n, :, :, c2] += self.bias[c2]
 
+                # convolve
                 for c1 in range(C1):
                     Y[n, :, :, c2] += correlate2d(X[n, :, :, c1], self.weights[:, :, c1, c2], mode=self.padding)
         return Y
@@ -125,9 +128,10 @@ class Conv2D(TrainableLayer):
         N, _, _, C1, = self.cached_X.shape
         k1, k2, _, C2 = self.weights.shape
 
+        # calculate error gradients
         for n in range(N):
             for c2 in range(C2):
-                dB[c2] = np.sum(dY[:, :, :, c2])
+                dB[c2] = np.sum(dY[n, :, :, c2])
 
                 for c1 in range(C1):
                     if self.padding == 'valid':
