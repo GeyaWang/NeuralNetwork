@@ -6,6 +6,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 from typing import Literal
 from collections import deque
+import time
 import os
 import pickle
 
@@ -127,20 +128,22 @@ class Sequential:
             verbose: Literal[0, 1] = 1,
             graph: Literal[0, 1, 2] = 0,
             graph_filepath: str = 'graph',
-            running_mean_err: int = 1,
+            running_mean_err: int = 100,
             save_filepath: str = None
     ):
         """Train over batch of input data"""
 
         assert x.shape[0] == y.shape[0], 'Input and output data must have the same batch size'
-        total_batches = x.shape[0]
+        total_steps = x.shape[0]
 
         # init variables
-        err_list = deque(maxlen=running_mean_err)
+        errs = deque(maxlen=running_mean_err)
+        times = deque(maxlen=running_mean_err)
+        err_mean = None
         err_plot = []
         err_mean_plot = []
 
-        total_batches_round = (total_batches // batch_size) * batch_size
+        total_steps_round = (total_steps // batch_size) * batch_size
 
         for epoch in range(epochs):
             # shuffle training_data
@@ -150,35 +153,51 @@ class Sequential:
             x_train = np.array(x_train)
             y_train = np.array(y_train)
 
+            epoch_start_time = time.perf_counter()
+
             progress_bar = ProgressBar()
-            progress_bar.prefix = f'Epoch: {epoch} - 0/{total_batches_round} '
+            progress_bar.prefix = f'Epoch: {epoch} - 0/{total_steps_round} '
 
             if verbose == 1:
                 # iterate through progress bar
-                iter_ = progress_bar(range(total_batches // batch_size))
+                iter_ = progress_bar(range(total_steps // batch_size))
                 print()  # new line
             else:  # verbose == 0
-                iter_ = range(total_batches // batch_size)
+                iter_ = range(total_steps // batch_size)
 
             for i in iter_:
                 low = i * batch_size
                 high = low + batch_size
+
+                t1 = time.perf_counter()
                 err = self.train_step(x_train[low: high], y_train[low: high])
-                err_list.append(err)
-                err_mean = np.mean(err_list)
+                t2 = time.perf_counter()
+
+                # save data
+                times.append(t2 - t1)
+                time_mean = np.mean(times)
+                errs.append(err)
+                err_mean = np.mean(errs)
 
                 if graph != 0:
                     err_plot.append(err)
                     err_mean_plot.append(err_mean)
 
+                # display data
                 if verbose == 1:
-                    progress_bar.prefix = f'Epoch: {epoch} - {high}/{total_batches_round} '
-                    progress_bar.suffix = f' - loss: {err_mean:.4f}'
+                    progress_bar.prefix = f'Epoch: {epoch} - {high}/{total_steps_round} '
+                    progress_bar.suffix = f' - ETA: {(total_steps_round - high) * time_mean / batch_size:.1f}s - loss: {err_mean:.4f}'
+
+            # display epoch data
+            if verbose == 1:
+                epoch_time = time.perf_counter() - epoch_start_time
+                progress_bar.set_end_txt(suffix=f' - {epoch_time:.1f}s {epoch_time / total_steps_round:.1f}s/step - loss: {err_mean:.4f}')
 
             # save model
             if save_filepath is not None:
                 self.save(save_filepath, verbose=verbose)
 
+        # plot graph
         if graph != 0:
             x_plot = [i * batch_size for i in range(len(err_plot))]
             plt.plot(x_plot, err_plot, label='error')
