@@ -65,9 +65,6 @@ static PyObject *_forward(PyObject* self, PyObject *args) {
         }
     }
 
-    // X not useful anymore
-    Py_DECREF(X);
-
     return PyArray_Return(Y);
 }
 
