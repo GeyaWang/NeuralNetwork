@@ -35,10 +35,10 @@ static PyObject *_forward(PyObject* self, PyObject *args) {
     npy_intp dims[] = {N, H2, W2, C2};
     PyArrayObject *Y = PyArray_SimpleNew(4, dims, NPY_DOUBLE);
 
-    double *X_data = (double *)PyArray_DATA(X);
-    double *K_data = (double *)PyArray_DATA(K);
-    double *B_data = (double *)PyArray_DATA(B);
-    double *Y_data = (double *)PyArray_DATA(Y);
+    double *X_data = (double*)PyArray_DATA(X);
+    double *K_data = (double*)PyArray_DATA(K);
+    double *B_data = (double*)PyArray_DATA(B);
+    double *Y_data = (double*)PyArray_DATA(Y);
 
     double sum;
     double bias;
