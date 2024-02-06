@@ -165,9 +165,6 @@ static PyObject *_backward(PyObject* self, PyObject *args) {
         dB_data[c2] = dB_sum;
     }
 
-    // dY not useful anymore
-    Py_DECREF(dY);
-
     return Py_BuildValue("OOO", dX, dW, dB);
 }
 
