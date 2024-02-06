@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 requires-python = ">=3.10.0"
-dependencies = ["numpy", "matplotlib", "scipy"]
+dependencies = ["numpy", "matplotlib"]
 name = "py-nn"
 version = "0.2.1"
 description = "Neural network created from scratch inspired by keras."
