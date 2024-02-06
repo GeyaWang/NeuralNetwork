@@ -3,6 +3,7 @@ from .initializers import GlorotUniform, Zeros
 import numpy as np
 from typing import Literal
 from scipy.signal import correlate2d, convolve2d
+import conv_func
 
 
 class Activation(Layer):
@@ -103,47 +104,10 @@ class Conv2D(TrainableLayer):
     def forward(self, X):
         self.cached_X = X
 
-        N, _, _, C1, = X.shape
-        H2, W2, C2 = self.output_shape
-
-        # initiate output
-        Y = np.zeros((N, H2, W2, C2))
-
-        for n in range(N):
-            for c2 in range(C2):
-                # add bias
-                Y[n, :, :, c2] += self.bias[c2]
-
-                # convolve
-                for c1 in range(C1):
-                    Y[n, :, :, c2] += correlate2d(X[n, :, :, c1], self.weights[:, :, c1, c2], mode=self.padding)
-        return Y
+        return conv_func.forward(X, self.weights, self.bias, self.padding)
 
     def backward(self, dY):
-        dW = np.zeros(self.weights.shape)
-        dB = np.zeros(self.bias.shape)
-        dX = np.zeros(self.cached_X.shape)
-
-        N, _, _, C1, = self.cached_X.shape
-        k1, k2, _, C2 = self.weights.shape
-
-        if self.padding == 'valid':
-            x_pad = self.cached_X
-        else:  # same
-            x_pad = np.pad(self.cached_X, ((0, 0), (k1 // 2, k1 // 2), (k2 // 2, k2 // 2), (0, 0)))
-
-        # calculate error gradients
-        for n in range(N):
-            for c2 in range(C2):
-                dB[c2] = np.sum(dY[n, :, :, c2])
-
-                for c1 in range(C1):
-                    if self.padding == 'valid':
-                        dX[n, :, :, c1] += convolve2d(dY[n, :, :, c2], self.weights[:, :, c1, c2], mode='full')
-                        dW[:, :, c1, c2] += correlate2d(x_pad[n, :, :, c1], dY[n, :, :, c2], mode='valid')
-                    elif self.padding == 'same':
-                        dX[n, :, :, c1] += convolve2d(dY[n, :, :, c2], self.weights[:, :, c1, c2], mode='same')
-                        dW[:, :, c1, c2] += correlate2d(x_pad[n, :, :, c1], dY[n, :, :, c2], mode='valid')
+        dX, dW, dB = conv_func.backward(self.cached_X, self.weights, dY, self.padding)
 
         # update parameters
         self.optimiser.update_params(self.weights, dW)
