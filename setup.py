@@ -3,15 +3,15 @@ from setuptools import Extension
 import numpy
 
 
+extension = Extension(
+    'conv_func',
+    ['conv_func.c'],
+    extra_compile_args=['/O2']
+)
 setup(
     name='conv-lib',
-    version='1',
-    ext_modules=[
-        Extension(
-            'conv_func',
-            ['conv_func.c'],
-            include_dirs=[numpy.get_include()],
-            extra_compile_args=['/O2']
-        )
-    ],
+    version='2.0',
+    install_requires=['numpy'],
+    ext_modules=[extension],
+    include_dirs=[numpy.get_include()]
 )
