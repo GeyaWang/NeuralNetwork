@@ -10,7 +10,8 @@ extension = Extension(
 )
 setup(
     name='conv-lib',
-    version='2.0',
+    version='2.1',
+    description='C extension made specifically for the convolution operations in the neural network project: https://github.com/GeyaWang/py-nn.git',
     install_requires=['numpy'],
     ext_modules=[extension],
     include_dirs=[numpy.get_include()]
