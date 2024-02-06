@@ -99,7 +99,6 @@ class Conv2D(TrainableLayer):
         self.bias_initializer = bias_initializer
 
         self.cached_X = None
-        self.cached_X_pad = None
 
     def forward(self, X):
         self.cached_X = X
@@ -128,6 +127,11 @@ class Conv2D(TrainableLayer):
         N, _, _, C1, = self.cached_X.shape
         k1, k2, _, C2 = self.weights.shape
 
+        if self.padding == 'valid':
+            x_pad = self.cached_X
+        else:  # same
+            x_pad = np.pad(self.cached_X, ((0, 0), (k1 // 2, k1 // 2), (k2 // 2, k2 // 2), (0, 0)))
+
         # calculate error gradients
         for n in range(N):
             for c2 in range(C2):
@@ -136,10 +140,10 @@ class Conv2D(TrainableLayer):
                 for c1 in range(C1):
                     if self.padding == 'valid':
                         dX[n, :, :, c1] += convolve2d(dY[n, :, :, c2], self.weights[:, :, c1, c2], mode='full')
-                        dW[:, :, c1, c2] += correlate2d(self.cached_X[n, :, :, c1], dY[n, :, :, c2], mode='valid')
+                        dW[:, :, c1, c2] += correlate2d(x_pad[n, :, :, c1], dY[n, :, :, c2], mode='valid')
                     elif self.padding == 'same':
                         dX[n, :, :, c1] += convolve2d(dY[n, :, :, c2], self.weights[:, :, c1, c2], mode='same')
-                        dW[:, :, c1, c2] += correlate2d(self.cached_X[n, :, :, c1], dY[n, :, :, c2], mode='same')
+                        dW[:, :, c1, c2] += correlate2d(x_pad[n, :, :, c1], dY[n, :, :, c2], mode='valid')
 
         # update parameters
         self.optimiser.update_params(self.weights, dW)
