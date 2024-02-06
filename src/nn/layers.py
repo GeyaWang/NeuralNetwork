@@ -2,7 +2,6 @@ from ._template import Layer, TrainableLayer, TrainingOnlyLayer, Initialise
 from .initializers import GlorotUniform, Zeros
 import numpy as np
 from typing import Literal
-from scipy.signal import correlate2d, convolve2d
 import conv_func
 
 
