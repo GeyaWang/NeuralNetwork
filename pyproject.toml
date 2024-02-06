@@ -12,6 +12,3 @@ authors = [{name = "Geya Wang", email = "geyaewang@gmail.com"}]
 
 [project.urls]
 Repository = "https://github.com/GeyaWang/py-nn.git"
-
-[tools.setuptools.extension]
-packages = ["conv_func"]
