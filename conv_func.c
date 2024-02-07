@@ -87,6 +87,11 @@ static PyObject *_forward(PyObject* self, PyObject *args) {
         }
     }
 
+    // Cleanup
+    Py_DECREF(X);
+    Py_DECREF(K);
+    Py_DECREF(B);
+
     return PyArray_Return(Y);
 }
 
