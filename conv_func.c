@@ -46,13 +46,6 @@ static PyObject *_forward(PyObject* self, PyObject *args) {
     double *B_data = (double*)PyArray_DATA(B);
     double *Y_data = (double*)PyArray_DATA(Y);
 
-    int X_size1 = H1 * W1 * C1; int X_size2 = W1 * C1;
-    int K_size1 = k2 * C1 * C2; int K_size2 = C1 * C2;
-    int Y_size1 = H2 * W2 * C2; int Y_size2 = W2 * C2;
-    double sum; double bias;
-    int max_x; int max_y; int min_x; int min_y;
-    int X_prod; int K_prod; int Y_prod; int pad_off_x; int pad_off_y; int i_off; int j_off;
-
     double sum;
     double bias;
 
