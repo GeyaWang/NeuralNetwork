@@ -9,7 +9,7 @@ extension = Extension(
 )
 setup(
     name='conv-lib',
-    version='2.2',
+    version='2.3',
     install_requires=['numpy'],
     ext_modules=[extension],
     include_dirs=[numpy.get_include()]
