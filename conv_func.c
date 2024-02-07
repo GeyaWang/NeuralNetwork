@@ -53,35 +53,26 @@ static PyObject *_forward(PyObject* self, PyObject *args) {
     int max_x; int max_y; int min_x; int min_y;
     int X_prod; int K_prod; int Y_prod; int pad_off_x; int pad_off_y; int i_off; int j_off;
 
+    double sum;
+    double bias;
+
     // Perform convolution
     for (int c2 = 0; c2 < C2; ++c2) {
         bias = B_data[c2];
 
         for (int n = 0; n < N; ++n) {
-            X_prod = n * X_size1;
-            Y_prod = n * Y_size1;
             for (int h = 0; h < H2; ++h) {
-                pad_off_x = h - pad_x;
-                max_x = MIN(k1, H1 + pad_x - h);
-                min_x = MAX(0, pad_x - h);
                 for (int w = 0; w < W2; ++w) {
-                    pad_off_y = w - pad_y;
-                    max_y = MIN(k2, W1 + pad_y - w);
-                    min_y = MAX(0, pad_y - w);
 
                     sum = 0;
                     for (int c1 = 0; c1 < C1; ++c1) {
-                        for (int i = min_x; i < max_x; ++i) {
-                            i_off = i + pad_off_x;
-                            K_prod = i * K_size1;
-                            for (int j = min_y; j < max_y; ++j) {
-                                j_off = j + pad_off_y;
-
-                                sum += X_data[X_prod + i_off * X_size2 + j_off * C1 + c1] * K_data[K_prod + j * K_size2 + c1 * C2 + c2];
+                        for (int i = max(0, pad_x - h); i < min(k1, H1 + pad_x - h); ++i) {
+                            for (int j = max(0, pad_y - w); j < min(k2, W1 + pad_y - w); ++j) {
+                                sum += X_data[(((n * H1) + (h + i - pad_x)) * W1 + (w + j - pad_y)) * C1 + c1] * K_data[(((i * k2) + j) * C1 + c1) * C2 + c2];
                             }
                         }
                     }
-                    Y_data[Y_prod + h * Y_size2 + w * C2 + c2] = bias + sum;
+                    Y_data[(((n * H2) + h) * W2 + w) * C2 + c2] = bias + sum;
                 }
             }
         }
