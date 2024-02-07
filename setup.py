@@ -5,12 +5,11 @@ import numpy
 
 extension = Extension(
     'conv_func',
-    ['conv_func.c'],
-    extra_compile_args=['/O2']
+    ['conv_func.c']
 )
 setup(
     name='conv-lib',
-    version='2.1',
+    version='2.2',
     install_requires=['numpy'],
     ext_modules=[extension],
     include_dirs=[numpy.get_include()]
