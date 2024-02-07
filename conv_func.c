@@ -8,11 +8,16 @@
 
 
 static PyObject *_forward(PyObject* self, PyObject *args) {
-    PyArrayObject *X;
-    PyArrayObject *K;
-    PyArrayObject *B;
+    PyObject *X_obj;
+    PyObject *K_obj;
+    PyObject *B_obj;
     char *padding;
-    PyArg_ParseTuple(args, "OOOs", &X, &K, &B, &padding);
+    
+    PyArg_ParseTuple(args, "OOOs", &X_obj, &K_obj, &B_obj, &padding);
+
+    PyArrayObject *X = PyArray_FROM_OTF(X_obj, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    PyArrayObject *K = PyArray_FROM_OTF(K_obj, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    PyArrayObject *B = PyArray_FROM_OTF(B_obj, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
 
     // Get input dimensions
     int N = PyArray_DIM(X, 0);
@@ -68,15 +73,25 @@ static PyObject *_forward(PyObject* self, PyObject *args) {
         }
     }
 
+    // Cleanup
+    Py_DECREF(X);
+    Py_DECREF(K);
+    Py_DECREF(B);
+
     return PyArray_Return(Y);
 }
 
 static PyObject *_backward(PyObject* self, PyObject *args) {
-    PyArrayObject *X;
-    PyArrayObject *K;
-    PyArrayObject *dY;
+    PyArrayObject *X_obj;
+    PyArrayObject *K_obj;
+    PyArrayObject *dY_obj;
     char *padding;
-    PyArg_ParseTuple(args, "OOOs", &X, &K, &dY, &padding);
+    
+    PyArg_ParseTuple(args, "OOOs", &X_obj, &K_obj, &dY_obj, &padding);
+
+    PyArrayObject *X = PyArray_FROM_OTF(X_obj, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    PyArrayObject *K = PyArray_FROM_OTF(K_obj, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    PyArrayObject *dY = PyArray_FROM_OTF(dY_obj, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
 
     // Get input dimensions
     int N = PyArray_DIM(X, 0);
@@ -171,6 +186,11 @@ static PyObject *_backward(PyObject* self, PyObject *args) {
         }
         dB_data[c2] = dB_sum;
     }
+
+    // Cleanup
+    Py_DECREF(X);
+    Py_DECREF(K);
+    Py_DECREF(dY);
 
     return Py_BuildValue("OOO", dX, dW, dB);
 }
