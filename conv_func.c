@@ -2,7 +2,7 @@
 #include <Python.h>
 #include <numpy/arrayobject.h>
 #include <string.h>
-#include <stdlib.h>
+#include <math.h>
 
 static PyObject *_forward(PyObject* self, PyObject *args) {
     PyArrayObject *X;
@@ -42,6 +42,7 @@ static PyObject *_forward(PyObject* self, PyObject *args) {
 
     double sum;
     double bias;
+    int max_x; int max_y;
 
     // Perform convolution
     for (int c2 = 0; c2 < C2; ++c2) {
@@ -51,10 +52,12 @@ static PyObject *_forward(PyObject* self, PyObject *args) {
             for (int h = 0; h < H2; ++h) {
                 for (int w = 0; w < W2; ++w) {
 
+                    max_x = fmin(k1, H1 + pad_x - h);
+                    max_y = fmin(k2, W1 + pad_y - w);
                     sum = 0;
                     for (int c1 = 0; c1 < C1; ++c1) {
-                        for (int i = max(0, pad_x - h); i < min(k1, H1 + pad_x - h); ++i) {
-                            for (int j = max(0, pad_y - w); j < min(k2, W1 + pad_y - w); ++j) {
+                        for (int i = fmax(0, pad_x - h); i < max_x; ++i) {
+                            for (int j = fmax(0, pad_y - w); j < max_y; ++j) {
                                 sum += X_data[(((n * H1) + (h + i - pad_x)) * W1 + (w + j - pad_y)) * C1 + c1] * K_data[(((i * k2) + j) * C1 + c1) * C2 + c2];
                             }
                         }
@@ -143,21 +146,21 @@ static PyObject *_backward(PyObject* self, PyObject *args) {
                 for (int i = 0; i < k1; ++i) {
                     for (int j = 0; j < k2; ++j) {
 
-                        max_x = min(H1, H2 + pad_dX_x - i);
-                        max_y = min(W1, W2 + pad_dX_y - j);
+                        max_x = fmin(H1, H2 + pad_dX_x - i);
+                        max_y = fmin(W1, W2 + pad_dX_y - j);
                         K_val = K_data[((((ki - i) * k2) + (kj - j)) * C1 + c1) * C2 + c2];
-                        for (int h1 = max(0, pad_dX_x - i); h1 < max_x; ++h1) {
-                            for (int w1 = max(0, pad_dX_y - j); w1 < max_y; ++w1) {
+                        for (int h1 = fmax(0, pad_dX_x - i); h1 < max_x; ++h1) {
+                            for (int w1 = fmax(0, pad_dX_y - j); w1 < max_y; ++w1) {
                                 dX_data[((n_H1 + h1) * W1 + w1) * C1 + c1] += dY_data[((n_H2 + (h1 + i - pad_dX_x)) * W2 + (w1 + j - pad_dX_y)) * C2 + c2] * K_val;
                             }
                         }
 
                         // dW
-                        max_x = min(H2, H1 + pad_dW_x - i);
-                        max_y = min(W2, W1 + pad_dW_y - j);
+                        max_x = fmin(H2, H1 + pad_dW_x - i);
+                        max_y = fmin(W2, W1 + pad_dW_y - j);
                         dW_sum = 0;
-                        for (int h2 = max(0, pad_dW_x - i); h2 < max_x; ++h2) {
-                            for (int w2 = max(0, pad_dW_y - j); w2 < max_y; ++w2) {
+                        for (int h2 = fmax(0, pad_dW_x - i); h2 < max_x; ++h2) {
+                            for (int w2 = fmax(0, pad_dW_y - j); w2 < max_y; ++w2) {
                                 dW_sum += X_data[((n_H1 + (h2 + i - pad_dW_x)) * W1 + (w2 + j - pad_dW_y)) * C1 + c1] * dY_data[((n_H2 + h2) * W2 + w2) * C2 + c2];
                             }
                         }
