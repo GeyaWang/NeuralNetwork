@@ -192,6 +192,13 @@ static PyObject *_backward(PyObject* self, PyObject *args) {
         }
         dB_data[c2] = dB_sum;
     }
+
+    // Cleanup
+    Py_DECREF(X);
+    Py_DECREF(K);
+    Py_DECREF(dY);
+    Py_DECREF(dY_obj);
+
     return Py_BuildValue("OOO", dX, dW, dB);
 }
 
