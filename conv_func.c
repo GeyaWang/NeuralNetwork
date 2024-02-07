@@ -59,8 +59,8 @@ static PyObject *_forward(PyObject* self, PyObject *args) {
 
                     sum = 0;
                     for (int c1 = 0; c1 < C1; ++c1) {
-                        for (int i = max(0, pad_x - h); i < min(k1, H1 + pad_x - h); ++i) {
-                            for (int j = max(0, pad_y - w); j < min(k2, W1 + pad_y - w); ++j) {
+                        for (int i = MAX(0, pad_x - h); i < MIN(k1, H1 + pad_x - h); ++i) {
+                            for (int j = MAX(0, pad_y - w); j < MIN(k2, W1 + pad_y - w); ++j) {
                                 sum += X_data[(((n * H1) + (h + i - pad_x)) * W1 + (w + j - pad_y)) * C1 + c1] * K_data[(((i * k2) + j) * C1 + c1) * C2 + c2];
                             }
                         }
