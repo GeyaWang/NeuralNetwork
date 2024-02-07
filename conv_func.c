@@ -181,7 +181,6 @@ static PyObject *_backward(PyObject* self, PyObject *args) {
     Py_DECREF(X);
     Py_DECREF(K);
     Py_DECREF(dY);
-    Py_DECREF(dY_obj);
 
     return Py_BuildValue("OOO", dX, dW, dB);
 }
