@@ -120,7 +120,7 @@ static PyObject *_backward(PyObject* self, PyObject *args) {
     int n_H1; int n_H2;
 
     int max_x; int max_y;
-    double dB_sum; double dW_sum; double dX_sum;
+    double dB_sum; double dW_sum;
     double K_val;
 
     // dB
@@ -146,13 +146,11 @@ static PyObject *_backward(PyObject* self, PyObject *args) {
                         max_x = min(H1, H2 + pad_dX_x - i);
                         max_y = min(W1, W2 + pad_dX_y - j);
                         K_val = K_data[((((ki - i) * k2) + (kj - j)) * C1 + c1) * C2 + c2];
-                        dX_sum = 0;
                         for (int h1 = max(0, pad_dX_x - i); h1 < max_x; ++h1) {
                             for (int w1 = max(0, pad_dX_y - j); w1 < max_y; ++w1) {
-                                dX_sum += dY_data[((n_H2 + (h1 + i - pad_dX_x)) * W2 + (w1 + j - pad_dX_y)) * C2 + c2] * K_val;
+                                dX_data[((n_H1 + h1) * W1 + w1) * C1 + c1] += dY_data[((n_H2 + (h1 + i - pad_dX_x)) * W2 + (w1 + j - pad_dX_y)) * C2 + c2] * K_val;
                             }
                         }
-                        dX_data[((n_H1 + h1) * W1 + w1) * C1 + c1] += dX_sum;
 
                         // dW
                         max_x = min(H2, H1 + pad_dW_x - i);
