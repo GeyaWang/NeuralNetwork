@@ -6,7 +6,7 @@ import numpy
 extension = Extension(
     'conv_func',
     ['conv_func.c'],
-    extra_compile_args=["-std=c18"],
+    extra_compile_args=["-std=c11"],
 )
 setup(
     name='conv-lib',
