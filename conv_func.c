@@ -134,9 +134,6 @@ static PyObject *_backward(PyObject* self, PyObject *args) {
         pad_dW_x = 0; pad_dW_y = 0;
     }
 
-    int ki = k1 - 1; int kj = k2 - 1;
-    int n_H1; int n_H2;
-
     int max_x; int max_y;
     double dB_sum; double dW_sum;
     double K_val;
@@ -147,12 +144,12 @@ static PyObject *_backward(PyObject* self, PyObject *args) {
         dB_sum = 0;
         for (int n = 0; n < N; ++n) {
 
-            n_H1 = n * H1;
-            n_H2 = n * H2;
+            n * H1 = n * H1;
+            n * H2 = n * H2;
 
             for (int h2 = 0; h2 < H2; ++h2) {
                 for (int w2 = 0; w2 < W2; ++w2) {
-                    dB_sum += dY_data[((n_H2 + h2) * W2 + w2) * C2 + c2];
+                    dB_sum += dY_data[((n * H2 + h2) * W2 + w2) * C2 + c2];
                 }
             }
 
@@ -163,10 +160,10 @@ static PyObject *_backward(PyObject* self, PyObject *args) {
 
                         max_x = MIN(H1, H2 + pad_dX_x - i);
                         max_y = MIN(W1, W2 + pad_dX_y - j);
-                        K_val = K_data[((((ki - i) * k2) + (kj - j)) * C1 + c1) * C2 + c2];
+                        K_val = K_data[((((k1 - i - 1) * k2) + (k2 - j - 1)) * C1 + c1) * C2 + c2];
                         for (int h1 = MAX(0, pad_dX_x - i); h1 < max_x; ++h1) {
                             for (int w1 = MAX(0, pad_dX_y - j); w1 < max_y; ++w1) {
-                                dX_data[((n_H1 + h1) * W1 + w1) * C1 + c1] += dY_data[((n_H2 + (h1 + i - pad_dX_x)) * W2 + (w1 + j - pad_dX_y)) * C2 + c2] * K_val;
+                                dX_data[((n * H1 + h1) * W1 + w1) * C1 + c1] += dY_data[((n * H2 + (h1 + i - pad_dX_x)) * W2 + (w1 + j - pad_dX_y)) * C2 + c2] * K_val;
                             }
                         }
 
@@ -176,7 +173,7 @@ static PyObject *_backward(PyObject* self, PyObject *args) {
                         dW_sum = 0;
                         for (int h2 = MAX(0, pad_dW_x - i); h2 < max_x; ++h2) {
                             for (int w2 = MAX(0, pad_dW_y - j); w2 < max_y; ++w2) {
-                                dW_sum += X_data[((n_H1 + (h2 + i - pad_dW_x)) * W1 + (w2 + j - pad_dW_y)) * C1 + c1] * dY_data[((n_H2 + h2) * W2 + w2) * C2 + c2];
+                                dW_sum += X_data[((n * H1 + (h2 + i - pad_dW_x)) * W1 + (w2 + j - pad_dW_y)) * C1 + c1] * dY_data[((n * H2 + h2) * W2 + w2) * C2 + c2];
                             }
                         }
                         dW_data[(((i * k2) + j) * C1 + c1) * C2 + c2] += dW_sum;
