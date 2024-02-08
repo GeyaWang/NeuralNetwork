@@ -143,10 +143,6 @@ static PyObject *_backward(PyObject* self, PyObject *args) {
 
         dB_sum = 0;
         for (int n = 0; n < N; ++n) {
-
-            n * H1 = n * H1;
-            n * H2 = n * H2;
-
             for (int h2 = 0; h2 < H2; ++h2) {
                 for (int w2 = 0; w2 < W2; ++w2) {
                     dB_sum += dY_data[((n * H2 + h2) * W2 + w2) * C2 + c2];
