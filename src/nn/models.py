@@ -2,7 +2,6 @@ import random
 from copy import deepcopy
 from .utils.progess_bar import ProgressBar
 from ._template import Layer, Optimiser, Loss, TrainableLayer, TrainingOnlyLayer
-from matplotlib import pyplot as plt
 import numpy as np
 from typing import Literal
 from collections import deque
@@ -120,7 +119,6 @@ class Sequential:
             batch_size: int = 1,
             epochs: int = 1,
             verbose: Literal[0, 1] = 1,
-            graph: Literal[0, 1, 2] = 0,
             graph_filepath: str = 'graph',
             running_mean_err: int = 100,
             save_filepath: str = None,
@@ -134,8 +132,6 @@ class Sequential:
         err_list = deque(maxlen=running_mean_err)
         time_list = deque(maxlen=running_mean_err)
         err_mean = None
-        err_plot = []
-        err_mean_plot = []
 
         total_steps_round = (total_steps // batch_size) * batch_size
 
@@ -178,10 +174,6 @@ class Sequential:
                 err_list.append(err)
                 err_mean = np.mean(err_list)
 
-                if graph != 0:
-                    err_plot.append(err)
-                    err_mean_plot.append(err_mean)
-
                 # display data
                 if verbose == 1:
                     progress_bar.prefix = f'Epoch: {epoch} - {step_high}/{total_steps_round} '
@@ -196,18 +188,6 @@ class Sequential:
             # save model
             if save_filepath is not None:
                 self.save(save_filepath, verbose=verbose)
-
-        # plot graph
-        if graph != 0:
-            x_plot = [i * batch_size for i in range(len(err_plot))]
-            plt.plot(x_plot, err_plot, label='error')
-            plt.plot(x_plot, err_mean_plot, label='mean error')
-            plt.legend()
-
-            if graph == 1:
-                plt.show()
-            else:  # graph == 2
-                plt.savefig(graph_filepath)
 
     def clone(self):
         """Returns deep copy of self"""
