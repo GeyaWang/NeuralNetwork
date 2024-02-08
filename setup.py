@@ -3,14 +3,15 @@ from setuptools import Extension
 import numpy
 
 
-extension = Extension(
+conv_ext = Extension(
     'conv_func',
     ['conv_func.c']
 )
+
 setup(
-    name='conv-lib',
-    version='2.5',
+    name='nn-func-lib',
+    version='2.6',
     install_requires=['numpy'],
-    ext_modules=[extension],
+    ext_modules=[conv_ext],
     include_dirs=[numpy.get_include()]
 )
