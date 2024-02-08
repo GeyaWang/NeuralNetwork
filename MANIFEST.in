@@ -1,1 +1,2 @@
-recursive-exclude . *.pyi
+graft py-nn
+global-exclude *.pyi
