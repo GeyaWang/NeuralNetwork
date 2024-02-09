@@ -10,7 +10,7 @@ conv_ext = Extension(
 
 setup(
     name='nn-func-lib',
-    version='2.6',
+    version='2.7',
     install_requires=['numpy'],
     ext_modules=[conv_ext],
     include_dirs=[numpy.get_include()]
