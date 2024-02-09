@@ -1,6 +1,7 @@
 #include <Python.h>
 #include <numpy/arrayobject.h>
 #include <string.h>
+#include <stdlib.h>
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -12,12 +13,12 @@ static PyObject *_forward(PyObject* self, PyObject *args) {
     PyObject *K_obj;
     PyObject *B_obj;
     char *padding;
-    
+
     PyArg_ParseTuple(args, "OOOs", &X_obj, &K_obj, &B_obj, &padding);
 
-    PyArrayObject *X = PyArray_FROM_OTF(X_obj, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
-    PyArrayObject *K = PyArray_FROM_OTF(K_obj, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
-    PyArrayObject *B = PyArray_FROM_OTF(B_obj, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    PyObject *X = PyArray_FROM_OTF(X_obj, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    PyObject *K = PyArray_FROM_OTF(K_obj, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    PyObject *B = PyArray_FROM_OTF(B_obj, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
 
     // Get input dimensions
     int N = PyArray_DIM(X, 0);
@@ -41,7 +42,7 @@ static PyObject *_forward(PyObject* self, PyObject *args) {
 
     // Initialise output
     npy_intp dims[] = {N, H2, W2, C2};
-    PyArrayObject *Y = PyArray_SimpleNew(4, dims, NPY_DOUBLE);
+    PyObject *Y = PyArray_SimpleNew(4, dims, NPY_DOUBLE);
 
     double *X_data = (double *)PyArray_DATA(X);
     double *K_data = (double *)PyArray_DATA(K);
@@ -78,20 +79,20 @@ static PyObject *_forward(PyObject* self, PyObject *args) {
     Py_DECREF(K);
     Py_DECREF(B);
 
-    return PyArray_Return(Y);
+    return Y;
 }
 
 static PyObject *_backward(PyObject* self, PyObject *args) {
-    PyArrayObject *X_obj;
-    PyArrayObject *K_obj;
-    PyArrayObject *dY_obj;
+    PyObject *X_obj;
+    PyObject *K_obj;
+    PyObject *dY_obj;
     char *padding;
-    
+
     PyArg_ParseTuple(args, "OOOs", &X_obj, &K_obj, &dY_obj, &padding);
 
-    PyArrayObject *X = PyArray_FROM_OTF(X_obj, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
-    PyArrayObject *K = PyArray_FROM_OTF(K_obj, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
-    PyArrayObject *dY = PyArray_FROM_OTF(dY_obj, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    PyObject *X = PyArray_FROM_OTF(X_obj, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    PyObject *K = PyArray_FROM_OTF(K_obj, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    PyObject *dY = PyArray_FROM_OTF(dY_obj, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
 
     // Get input dimensions
     int N = PyArray_DIM(X, 0);
@@ -108,9 +109,9 @@ static PyObject *_backward(PyObject* self, PyObject *args) {
     npy_intp dims_dX[] = {N, H1, W1, C1};
     npy_intp dims_dW[] = {k1, k2, C1, C2};
     npy_intp dims_dB[] = {C2};
-    PyArrayObject *dX = PyArray_SimpleNew(4, dims_dX, NPY_DOUBLE);
-    PyArrayObject *dW = PyArray_SimpleNew(4, dims_dW, NPY_DOUBLE);
-    PyArrayObject *dB = PyArray_SimpleNew(1, dims_dB, NPY_DOUBLE);
+    PyObject *dX = PyArray_SimpleNew(4, dims_dX, NPY_DOUBLE);
+    PyObject *dW = PyArray_SimpleNew(4, dims_dW, NPY_DOUBLE);
+    PyObject *dB = PyArray_SimpleNew(1, dims_dB, NPY_DOUBLE);
 
     // fill with zeros
     PyArray_FILLWBYTE(dX, 0);
@@ -183,12 +184,15 @@ static PyObject *_backward(PyObject* self, PyObject *args) {
     // Cleanup
     Py_DECREF(X);
     Py_DECREF(K);
-    Py_DECREF(dY_obj);
     Py_DECREF(dY);
 
-    return Py_BuildValue("OOO", dX, dW, dB);
-}
+    PyObject *output = PyTuple_New(3);
+    PyTuple_SetItem(output, 0, dX);
+    PyTuple_SetItem(output, 1, dW);
+    PyTuple_SetItem(output, 2, dB);
 
+    return output;
+}
 
 static struct PyMethodDef methods[] = {
     {"forward", _forward, METH_VARARGS, "Forward convolution step"},
