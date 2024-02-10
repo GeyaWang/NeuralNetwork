@@ -225,7 +225,7 @@ class Sequential:
             pickle.dump(model_data, file)
 
         if verbose == 1:
-            print(f'Successfully saved file to {filepath}')
+            print(f'Successfully saved file to {os.path.abspath(filepath)}')
 
     @classmethod
     def load(cls, filepath: str, verbose: Literal[0, 1] = 1):
@@ -242,6 +242,6 @@ class Sequential:
         layers = model_data["layers"]
 
         if verbose == 1:
-            print(f'Successfully loaded file from {filepath}')
+            print(f'Successfully loaded file from {os.path.abspath(filepath)}')
 
         return Sequential(layers=layers)
