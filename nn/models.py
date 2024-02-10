@@ -98,7 +98,7 @@ class Sequential:
             y = layer.backward(y)
         return y
 
-    def train_step(self, x: np.ndarray, y: np.ndarray):
+    def train_step(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
         assert self.optimiser is not None and self.loss is not None, 'Model must be compiled before training'
 
         # forward propagation
@@ -106,11 +106,10 @@ class Sequential:
 
         # calculate error and error gradient
         dY = self.loss.func_prime(y, y_pred)
-        error = self.loss.func(y, y_pred)
 
         # backward propagation
         self.backward_propagation(dY)
-        return error
+        return y_pred
 
     def fit(
             self,
@@ -119,9 +118,9 @@ class Sequential:
             batch_size: int = 1,
             epochs: int = 1,
             verbose: Literal[0, 1] = 1,
-            graph_filepath: str = 'graph',
             running_mean_err: int = 100,
             save_filepath: str = None,
+            metrics: list[Literal['accuracy']] = None
     ):
         """Train over batch of input data"""
 
@@ -131,7 +130,12 @@ class Sequential:
         # init variables
         err_list = deque(maxlen=running_mean_err)
         time_list = deque(maxlen=running_mean_err)
-        err_mean = None
+
+        acc_list = None
+        progress_bar = None
+
+        if 'accuracy' in metrics:
+            acc_list = deque(maxlen=running_mean_err)
 
         total_steps_round = (total_steps // batch_size) * batch_size
 
@@ -145,44 +149,56 @@ class Sequential:
 
             epoch_start_time = time.perf_counter()
 
-            progress_bar = ProgressBar()
-            progress_bar.prefix = f'Epoch: {epoch} - 0/{total_steps_round} '
-
             iter_ = range(total_steps // batch_size)
             if verbose == 1:
-                # iterate through progress bar
+                progress_bar = ProgressBar()
+                progress_bar.prefix = f'Epoch: {epoch} - 0/{total_steps_round} '
                 iter_ = progress_bar(iter_)
                 print()
 
             for i in iter_:
                 step_low = i * batch_size
                 step_high = step_low + batch_size
+                y_true = y_train[step_low: step_high]
 
-                # use multiprocessing to process batches, record time
                 t1 = time.perf_counter()
                 try:
-                    err = self.train_step(x_train[step_low: step_high], y_train[step_low: step_high])
+                    y_pred = self.train_step(x_train[step_low: step_high], y_true)
+
                 # catch keyboard interrupt
                 except KeyboardInterrupt:
                     print('\n\nForcefully shut down by user')
                     sys.exit()
                 t2 = time.perf_counter()
 
-                # save data
+                # statistics
                 time_list.append(t2 - t1)
                 time_mean = np.mean(time_list)
+                err = self.loss.func(y_true, y_pred)
                 err_list.append(err)
-                err_mean = np.mean(err_list)
+                acc_list.append(np.mean(np.argmax(y_true, axis=1) == np.argmax(y_pred, axis=1)))  # accuracy of batch
 
                 # display data
                 if verbose == 1:
-                    progress_bar.prefix = f'Epoch: {epoch} - {step_high}/{total_steps_round} '
-                    progress_bar.suffix = f' - ETA: {(total_steps_round - step_high) * time_mean / batch_size:.1f}s - loss: {err_mean:.4f}'
+                    # ETA and loss
+                    prefix = f'Epoch: {epoch} - {step_high}/{total_steps_round} '
+                    suffix = f' - ETA: {(total_steps_round - step_high) * time_mean / batch_size:.1f}s - loss: {np.mean(err_list):.4f}'
+
+                    if 'accuracy' in metrics:
+                        suffix += f' - accuracy: {np.mean(acc_list):.4f}'
+
+                    progress_bar.prefix = prefix
+                    progress_bar.suffix = suffix
 
             # display epoch data
             if verbose == 1:
                 epoch_time = time.perf_counter() - epoch_start_time
-                progress_bar.set_end_txt(suffix=f' - {epoch_time:.1f}s {epoch_time / total_steps_round:.1f}s/step - loss: {err_mean:.4f}')
+                suffix = f' - {epoch_time:.1f}s {epoch_time / total_steps_round:.1f}s/step - loss: {np.mean(err_list):.4f}'
+
+                if 'accuracy' in metrics:
+                    suffix += f' - accuracy: {np.mean(acc_list):.4f}'
+
+                progress_bar.set_end_txt(suffix=suffix)
                 print()
 
             # save model
