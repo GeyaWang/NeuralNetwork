@@ -1,14 +1,10 @@
-import random
-from copy import deepcopy
-from .utils.progess_bar import ProgressBar
 from ._template import Layer, Optimiser, Loss, TrainableLayer, TrainingOnlyLayer
+from .agent import TrainingAgent, Agent
 import numpy as np
 from typing import Literal
-from collections import deque
-import time
 import os
 import pickle
-import sys
+from copy import deepcopy
 
 FILE_EXTENSION = 'ptd'
 
@@ -111,6 +107,10 @@ class Sequential:
         self.backward_propagation(dY)
         return y_pred
 
+    def train_agent(self, agent: Agent, *args):
+        agent.model = self
+        agent.train(*args)
+
     def fit(
             self,
             x: np.ndarray,
@@ -118,95 +118,14 @@ class Sequential:
             batch_size: int = 1,
             epochs: int = 1,
             verbose: Literal[0, 1] = 1,
-            running_mean_err: int = 100,
+            running_mean_size: int = 100,
             save_filepath: str = None,
             metrics: list[Literal['accuracy']] = None
     ):
-        """Train over batch of input data"""
+        """Train over batch data using agent"""
 
-        assert x.shape[0] == y.shape[0], 'Input and output data must have the same batch size'
-        total_steps = x.shape[0]
-
-        if metrics is None:
-            metrics = []
-
-        # init variables
-        err_list = deque(maxlen=running_mean_err)
-        time_list = deque(maxlen=running_mean_err)
-
-        acc_list = None
-        progress_bar = None
-
-        if 'accuracy' in metrics:
-            acc_list = deque(maxlen=running_mean_err)
-
-        total_steps_round = (total_steps // batch_size) * batch_size
-
-        for epoch in range(epochs):
-            # shuffle training_data
-            zip_ = list(zip(x, y))
-            random.shuffle(zip_)
-            x_train, y_train = zip(*zip_)
-            x_train = np.array(x_train)
-            y_train = np.array(y_train)
-
-            epoch_start_time = time.perf_counter()
-
-            iter_ = range(total_steps // batch_size)
-            if verbose == 1:
-                progress_bar = ProgressBar()
-                progress_bar.prefix = f'Epoch: {epoch} - 0/{total_steps_round} '
-                iter_ = progress_bar(iter_)
-                print()
-
-            for i in iter_:
-                step_low = i * batch_size
-                step_high = step_low + batch_size
-                y_true = y_train[step_low: step_high]
-
-                t1 = time.perf_counter()
-                try:
-                    y_pred = self.train_step(x_train[step_low: step_high], y_true)
-
-                # catch keyboard interrupt
-                except KeyboardInterrupt:
-                    print('\n\nForcefully shut down by user')
-                    sys.exit()
-                t2 = time.perf_counter()
-
-                # statistics
-                time_list.append(t2 - t1)
-                time_mean = np.mean(time_list)
-                err = self.loss.func(y_true, y_pred)
-                err_list.append(err)
-                acc_list.append(np.mean(np.argmax(y_true, axis=1) == np.argmax(y_pred, axis=1)))  # accuracy of batch
-
-                # display data
-                if verbose == 1:
-                    # ETA and loss
-                    prefix = f'Epoch: {epoch} - {step_high}/{total_steps_round} '
-                    suffix = f' - ETA: {(total_steps_round - step_high) * time_mean / batch_size:.1f}s - loss: {np.mean(err_list):.4f}'
-
-                    if 'accuracy' in metrics:
-                        suffix += f' - accuracy: {np.mean(acc_list):.4f}'
-
-                    progress_bar.prefix = prefix
-                    progress_bar.suffix = suffix
-
-            # display epoch data
-            if verbose == 1:
-                epoch_time = time.perf_counter() - epoch_start_time
-                suffix = f' - {epoch_time:.1f}s {epoch_time / total_steps_round:.2f}s/step - loss: {np.mean(err_list):.4f}'
-
-                if 'accuracy' in metrics:
-                    suffix += f' - accuracy: {np.mean(acc_list):.4f}'
-
-                progress_bar.set_end_txt(suffix=suffix)
-                print()
-
-            # save model
-            if save_filepath is not None:
-                self.save(save_filepath, verbose=verbose)
+        agent = TrainingAgent(batch_size, epochs, verbose, running_mean_size, save_filepath, metrics)
+        self.train_agent(agent, x, y)
 
     def clone(self):
         """Returns deep copy of self"""
