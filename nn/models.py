@@ -127,6 +127,9 @@ class Sequential:
         assert x.shape[0] == y.shape[0], 'Input and output data must have the same batch size'
         total_steps = x.shape[0]
 
+        if metrics is None:
+            metrics = []
+
         # init variables
         err_list = deque(maxlen=running_mean_err)
         time_list = deque(maxlen=running_mean_err)
