@@ -196,7 +196,7 @@ class Sequential:
             # display epoch data
             if verbose == 1:
                 epoch_time = time.perf_counter() - epoch_start_time
-                suffix = f' - {epoch_time:.1f}s {epoch_time / total_steps_round:.1f}s/step - loss: {np.mean(err_list):.4f}'
+                suffix = f' - {epoch_time:.1f}s {epoch_time / total_steps_round:.2f}s/step - loss: {np.mean(err_list):.4f}'
 
                 if 'accuracy' in metrics:
                     suffix += f' - accuracy: {np.mean(acc_list):.4f}'
