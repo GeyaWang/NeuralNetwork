@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 
-class Initialise(ABC):
+class Initialize(ABC):
     @staticmethod
     @abstractmethod
     def __call__(shape, dtype=None, **kwargs) -> np.ndarray:
@@ -45,25 +45,25 @@ class Layer(ABC):
     def backward(self, dY) -> np.ndarray:
         pass
 
+    def init(self) -> None:
+        """Called after input shape is assigned"""
+        self.output_shape = self.input_shape
+
 
 class TrainableLayer(Layer, ABC):
     def __init__(self, input_shape: None | tuple[int, ...], output_shape: None | tuple[int, ...]):
         super().__init__()
         self.input_shape = input_shape
-        self.output = output_shape
-
-    @abstractmethod
-    def init_params(self) -> None:
-        pass
+        self.output_shape = output_shape
 
     @property
     @abstractmethod
     def params(self) -> int:
         pass
 
-    @property
-    def output_shape(self):
-        return self.output
+    @abstractmethod
+    def init(self) -> None:
+        pass
 
 
 class TrainingOnlyLayer(Layer, ABC):
