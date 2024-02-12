@@ -29,13 +29,8 @@ class Sequential:
             assert self.prev_output_shape is not None, 'Input shape of first layer not specified'
             layer.input_shape = self.prev_output_shape
 
-        # set output shape
-        if layer.output_shape is None:
-            layer.output_shape = layer.input_shape
+        layer.init()
         self.prev_output_shape = layer.output_shape
-
-        if isinstance(layer, TrainableLayer):
-            layer.init_params()
 
         self.layers.append(layer)
 
