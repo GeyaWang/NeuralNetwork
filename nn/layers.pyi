@@ -16,7 +16,13 @@ class Activation(Layer):
 
 
 class Dense(TrainableLayer):
-    def __init__(self, units: int, input_shape: tuple[int] = None, kernel_initializer: Initialize = GlorotUniform(), bias_initializer: Initialize = Zeros()):
+    def __init__(
+            self,
+            units: int,
+            input_shape: tuple[int] = None,
+            kernel_initializer: Initialize = GlorotUniform(),
+            bias_initializer: Initialize = Zeros()
+    ):
         self.weights: np.ndarray = None
         self.bias: np.ndarray = None
         self.optimiser: Optimiser = None
