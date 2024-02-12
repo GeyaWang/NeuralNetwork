@@ -46,6 +46,7 @@ static PyObject *_forward(PyObject* self, PyObject *args) {
             for (int w = 0; w < W2; ++w) {
                 for (int c = 0; c < C; ++c) {
 
+                    sum = 0;
                     for (int i = MAX(0, pad_x - h * stride_x); i < pool_x; ++i) {
                         for (int j = MAX(0, pad_y - w * stride_y); j < pool_y; ++j) {
                             sum += X_data[(((n * H1) + (h * stride_x + i - pad_x)) * W1 + (w * stride_y + j - pad_y)) * C + c];
