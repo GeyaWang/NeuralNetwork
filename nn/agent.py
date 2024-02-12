@@ -92,7 +92,9 @@ class TrainingAgent(Agent):
                 time_mean = np.mean(self.time_list)
                 err = self.model.loss.func(y_true, y_pred)
                 self.err_list.append(err)
-                self.acc_list.append(np.mean(np.argmax(y_true, axis=1) == np.argmax(y_pred, axis=1)))  # accuracy of batch
+
+                if 'accuracy' in self.metrics:
+                    self.acc_list.append(np.mean(np.argmax(y_true, axis=1) == np.argmax(y_pred, axis=1)))  # accuracy of batch
 
                 # display data
                 if self.verbose == 1:
