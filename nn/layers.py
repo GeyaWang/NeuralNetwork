@@ -173,9 +173,9 @@ class MaxPooling2D(Layer):
                     for c in range(C1):
                         max_ = -999
 
-                        for i in range(self.pool_size[0]):
-                            for j in range(self.pool_size[1]):
-                                x_val = X[n, h * self.strides[0] + i, w * self.strides[1] + j, c]
+                        for i in range(max(0, self.pad[0] - h * self.strides[0]), self.pool_size[0]):
+                            for j in range(max(0, self.pad[0] - h * self.strides[0]), self.pool_size[1]):
+                                x_val = X[n, h * self.strides[0] + i - self.pad[0], w * self.strides[1] + j - self.pad[1], c]
                                 if max_ < x_val:
                                     max_ = x_val
 
@@ -196,15 +196,15 @@ class MaxPooling2D(Layer):
                         rel_pos_y = None
                         max_ = -999
 
-                        for i in range(self.pool_size[0]):
-                            for j in range(self.pool_size[1]):
-                                x_val = self.cached_X[n, h * self.strides[0] + i, w * self.strides[1] + j, c]
+                        for i in range(max(0, self.pad[0] - h * self.strides[0]), self.pool_size[0]):
+                            for j in range(max(0, self.pad[0] - h * self.strides[0]), self.pool_size[1]):
+                                x_val = self.cached_X[n, h * self.strides[0] + i - self.pad[0], w * self.strides[1] + j - self.pad[1], c]
                                 if x_val > max_:
                                     max_ = x_val
                                     rel_pos_x = i
                                     rel_pos_y = j
 
-                        dX[n, h * self.strides[0] + rel_pos_x, w * self.strides[1] + rel_pos_y, c] = dY[n, h, w, c]
+                        dX[n, h * self.strides[0] + rel_pos_x - self.pad[0], w * self.strides[1] + rel_pos_y - self.pad[1], c] = dY[n, h, w, c]
         return dX
 
     def init(self):
@@ -213,13 +213,15 @@ class MaxPooling2D(Layer):
             width = ceil(self.input_shape[1] / self.strides[1])
 
             # Calculate padding
-            pad_x = ((height - 1) * self.strides[0] + self.pool_size[0] - self.input_shape[0]) / 2
-            pad_y = ((width - 1) * self.strides[1] + self.pool_size[1] - self.input_shape[1]) / 2
+            pad_x = int(((height - 1) * self.strides[0] + self.pool_size[0] - self.input_shape[0]) / 2)
+            pad_y = int(((width - 1) * self.strides[1] + self.pool_size[1] - self.input_shape[1]) / 2)
             self.pad = (pad_x, pad_y)
 
         else:  # self.padding == 'valid'
             height = floor((self.input_shape[0] - self.pool_size[0]) / self.strides[0]) + 1
             width = floor((self.input_shape[1] - self.pool_size[1]) / self.strides[1]) + 1
+
+            self.pad = (0, 0)
 
         self.output_shape = (height, width, self.input_shape[2])
 
@@ -242,9 +244,9 @@ class AveragePooling2D(MaxPooling2D):
                     for c in range(C1):
                         sum_ = 0
 
-                        for i in range(self.pool_size[0]):
-                            for j in range(self.pool_size[1]):
-                                sum_ += X[n, h * self.strides[0] + i, w * self.strides[1] + j, c]
+                        for i in range(max(0, self.pad[0] - h * self.strides[0]), self.pool_size[0]):
+                            for j in range(max(0, self.pad[0] - h * self.strides[0]), self.pool_size[1]):
+                                sum_ += X[n, h * self.strides[0] + i - self.pad[0], w * self.strides[1] + j - self.pad[1], c]
 
                         Y[n, h, w, c] = sum_ / (self.pool_size[0] * self.pool_size[1])
         return Y
@@ -261,9 +263,9 @@ class AveragePooling2D(MaxPooling2D):
                     for c in range(C1):
                         val = dY[n, h, w, c] / (self.pool_size[0] * self.pool_size[1])
 
-                        for i in range(self.pool_size[0]):
-                            for j in range(self.pool_size[1]):
-                                dX[n, h * self.strides[0] + i, w * self.strides[1] + j, c] = val
+                        for i in range(max(0, self.pad[0] - h * self.strides[0]), self.pool_size[0]):
+                            for j in range(max(0, self.pad[0] - h * self.strides[0]), self.pool_size[1]):
+                                dX[n, h * self.strides[0] + i - self.pad[0], w * self.strides[1] + j - self.pad[1], c] = val
         return dX
 
 
