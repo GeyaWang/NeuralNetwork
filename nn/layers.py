@@ -3,6 +3,8 @@ from .initializers import GlorotUniform, Zeros
 from math import floor, ceil
 import numpy as np
 import conv_func
+import pooling_max_func
+import pooling_avg_func
 
 
 class Activation(Layer):
@@ -162,50 +164,10 @@ class MaxPooling2D(Layer):
     def forward(self, X):
         self.cached_X = X
 
-        N, H1, W1, C1 = X.shape
-        H2, W2, _ = self.output_shape
-
-        Y = np.zeros((N, H2, W2, C1))
-
-        for n in range(N):
-            for h in range(H2):
-                for w in range(W2):
-                    for c in range(C1):
-                        max_ = -999
-
-                        for i in range(max(0, self.pad[0] - h * self.strides[0]), self.pool_size[0]):
-                            for j in range(max(0, self.pad[0] - h * self.strides[0]), self.pool_size[1]):
-                                x_val = X[n, h * self.strides[0] + i - self.pad[0], w * self.strides[1] + j - self.pad[1], c]
-                                if max_ < x_val:
-                                    max_ = x_val
-
-                        Y[n, h, w, c] = max_
-        return Y
+        return pooling_max_func.forward(X, self.output_shape, self.pool_size, self.strides, self.pad)
 
     def backward(self, dY):
-        N, H1, W1, C1 = self.cached_X.shape
-        H2, W2, _ = self.output_shape
-
-        dX = np.zeros((N, H1, W1, C1))
-
-        for n in range(N):
-            for h in range(H2):
-                for w in range(W2):
-                    for c in range(C1):
-                        rel_pos_x = None
-                        rel_pos_y = None
-                        max_ = -999
-
-                        for i in range(max(0, self.pad[0] - h * self.strides[0]), self.pool_size[0]):
-                            for j in range(max(0, self.pad[0] - h * self.strides[0]), self.pool_size[1]):
-                                x_val = self.cached_X[n, h * self.strides[0] + i - self.pad[0], w * self.strides[1] + j - self.pad[1], c]
-                                if x_val > max_:
-                                    max_ = x_val
-                                    rel_pos_x = i
-                                    rel_pos_y = j
-
-                        dX[n, h * self.strides[0] + rel_pos_x - self.pad[0], w * self.strides[1] + rel_pos_y - self.pad[1], c] = dY[n, h, w, c]
-        return dX
+        return pooling_max_func.backward(self.cached_X, dY, self.pool_size, self.strides, self.pad)
 
     def init(self):
         if self.padding == 'same':
@@ -233,40 +195,10 @@ class AveragePooling2D(MaxPooling2D):
     def forward(self, X):
         self.cached_X = X
 
-        N, H1, W1, C1 = X.shape
-        H2, W2, _ = self.output_shape
-
-        Y = np.zeros((N, H2, W2, C1))
-
-        for n in range(N):
-            for h in range(H2):
-                for w in range(W2):
-                    for c in range(C1):
-                        sum_ = 0
-
-                        for i in range(max(0, self.pad[0] - h * self.strides[0]), self.pool_size[0]):
-                            for j in range(max(0, self.pad[0] - h * self.strides[0]), self.pool_size[1]):
-                                sum_ += X[n, h * self.strides[0] + i - self.pad[0], w * self.strides[1] + j - self.pad[1], c]
-
-                        Y[n, h, w, c] = sum_ / (self.pool_size[0] * self.pool_size[1])
-        return Y
+        return pooling_avg_func.forward(X, self.output_shape, self.pool_size, self.strides, self.pad)
 
     def backward(self, dY):
-        N, H1, W1, C1 = self.cached_X.shape
-        H2, W2, _ = self.output_shape
-
-        dX = np.zeros((N, H1, W1, C1))
-
-        for n in range(N):
-            for h in range(H2):
-                for w in range(W2):
-                    for c in range(C1):
-                        val = dY[n, h, w, c] / (self.pool_size[0] * self.pool_size[1])
-
-                        for i in range(max(0, self.pad[0] - h * self.strides[0]), self.pool_size[0]):
-                            for j in range(max(0, self.pad[0] - h * self.strides[0]), self.pool_size[1]):
-                                dX[n, h * self.strides[0] + i - self.pad[0], w * self.strides[1] + j - self.pad[1], c] = val
-        return dX
+        return pooling_avg_func.backward(self.cached_X, dY, self.pool_size, self.strides, self.pad)
 
 
 class Flatten(Layer):
