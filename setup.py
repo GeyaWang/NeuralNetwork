@@ -13,13 +13,19 @@ pool_max_ext = Extension(
     ['pooling_max_func.c']
 )
 
+pool_avg_ext = Extension(
+    'pooling_avg_func',
+    ['pooling_avg_func.c']
+)
+
 setup(
     name='nn-func-lib',
-    version='3.0',
+    version='3.1',
     install_requires=['numpy'],
     ext_modules=[
         conv_ext,
-        pool_max_ext
+        pool_max_ext,
+        pool_avg_ext
     ],
     include_dirs=[numpy.get_include()]
 )
