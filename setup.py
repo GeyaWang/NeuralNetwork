@@ -20,7 +20,7 @@ pool_avg_ext = Extension(
 
 setup(
     name='nn-func-lib',
-    version='3.1',
+    version='3.3',
     install_requires=['numpy'],
     ext_modules=[
         conv_ext,
