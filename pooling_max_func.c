@@ -91,6 +91,7 @@ static PyObject *_backward(PyObject* self, PyObject *args) {
 
     npy_intp dims[] = {N, H1, W1, C};
     PyObject *dX = PyArray_SimpleNew(4, dims, NPY_DOUBLE);
+    PyArray_FILLWBYTE(dX, 0);
 
     double *X_data = (double *)PyArray_DATA(X);
     double *dY_data = (double *)PyArray_DATA(dY);
