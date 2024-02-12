@@ -16,9 +16,6 @@ static PyObject *_forward(PyObject* self, PyObject *args) {
     PyObject *strides_tuple;
     PyObject *pad_tuple;
 
-    int N = PyArray_DIM(X, 0);
-    int H1 = PyArray_DIM(X, 1);
-    int W1 = PyArray_DIM(X, 2);
     int H2; int W2; int C;
     int pool_x; int pool_y;
     int stride_x; int stride_y;
@@ -32,13 +29,17 @@ static PyObject *_forward(PyObject* self, PyObject *args) {
 
     PyObject *X = PyArray_FROM_OTF(X_obj, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
 
+    int N = PyArray_DIM(X, 0);
+    int H1 = PyArray_DIM(X, 1);
+    int W1 = PyArray_DIM(X, 2);
+
     npy_intp dims[] = {N, H2, W2, C};
     PyObject *Y = PyArray_SimpleNew(4, dims, NPY_DOUBLE);
 
     double *X_data = (double *)PyArray_DATA(X);
     double *Y_data = (double *)PyArray_DATA(Y);
 
-    int max;
+    double max;
 
     for (int n = 0; n < N; ++n) {
         for (int h = 0; h < H2; ++h) {
@@ -69,12 +70,6 @@ static PyObject *_backward(PyObject* self, PyObject *args) {
     PyObject *strides_tuple;
     PyObject *pad_tuple;
 
-    int N = PyArray_DIM(X, 0);
-    int H1 = PyArray_DIM(X, 1);
-    int W1 = PyArray_DIM(X, 2);
-    int C = PyArray_DIM(X, 3);
-    int H2 = PyArray_DIM(dY, 1);
-    int W2 = PyArray_DIM(dY, 2);
     int pool_x; int pool_y;
     int stride_x; int stride_y;
     int pad_x; int pad_y;
@@ -87,6 +82,13 @@ static PyObject *_backward(PyObject* self, PyObject *args) {
     PyObject *X = PyArray_FROM_OTF(X_obj, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
     PyObject *dY = PyArray_FROM_OTF(dY_obj, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
 
+    int N = PyArray_DIM(X, 0);
+    int H1 = PyArray_DIM(X, 1);
+    int W1 = PyArray_DIM(X, 2);
+    int C = PyArray_DIM(X, 3);
+    int H2 = PyArray_DIM(dY, 1);
+    int W2 = PyArray_DIM(dY, 2);
+
     npy_intp dims[] = {N, H1, W1, C};
     PyObject *dX = PyArray_SimpleNew(4, dims, NPY_DOUBLE);
 
@@ -94,7 +96,7 @@ static PyObject *_backward(PyObject* self, PyObject *args) {
     double *dY_data = (double *)PyArray_DATA(dY);
     double *dX_data = (double *)PyArray_DATA(dX);
 
-    int max;
+    double max;
     int pos_x; int pos_y;
     double x_val;
 
