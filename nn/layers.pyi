@@ -121,6 +121,21 @@ class AveragePooling2D(MaxPooling2D):
         ...
 
 
+class Reshape(Layer):
+    def __init__(self) -> None:
+        self.shape: tuple[int, ...] = None
+        self.cached_X_shape: np.ndarray = None
+
+    def forward(self, X: np.ndarray) -> np.ndarray:
+        ...
+
+    def backward(self, dY: np.ndarray) -> np.ndarray:
+        ...
+
+    def init(self) -> None:
+        pass
+
+
 class Flatten(Layer):
     def __init__(self) -> None:
         self.cached_X_shape: np.ndarray = None

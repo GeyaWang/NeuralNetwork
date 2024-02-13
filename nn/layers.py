@@ -201,6 +201,24 @@ class AveragePooling2D(MaxPooling2D):
         return pooling_avg_func.backward(self.cached_X, dY, self.pool_size, self.strides, self.pad)
 
 
+class Reshape(Layer):
+    def __init__(self, shape):
+        super().__init__()
+        self.shape = shape
+        self.cached_X_shape = None
+
+    def forward(self, X):
+        self.cached_X_shape = X.shape
+
+        return np.reshape(X, (X.shape[0], *self.shape))
+
+    def backward(self, dY):
+        return np.reshape(dY, self.cached_X_shape)
+
+    def init(self):
+        self.output_shape = self.shape
+
+
 class Flatten(Layer):
     def __init__(self):
         super().__init__()
@@ -209,10 +227,7 @@ class Flatten(Layer):
     def forward(self, X):
         self.cached_X_shape = X.shape
 
-        N = X.shape[0]
-        P = np.prod(X.shape[1:])
-
-        return np.reshape(X, (N, P))
+        return np.reshape(X, (X.shape[0], np.prod(X.shape[1:])))
 
     def backward(self, dY):
         return np.reshape(dY, self.cached_X_shape)
