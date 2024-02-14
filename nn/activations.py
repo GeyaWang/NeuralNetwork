@@ -35,3 +35,12 @@ class SoftMax(ActivationLayer):
         tmp = self.func_prime(self.cached_output)
         dX = np.einsum('ijk,ik->ij', tmp, dY)
         return dX
+
+
+class Sigmoid(ActivationLayer):
+    def func(self, X):
+        return 1 / (1 + np.exp(-X))
+
+    def func_prime(self, X):
+        s = self.func(X)
+        return s * (1 - s)
