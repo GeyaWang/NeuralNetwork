@@ -1,7 +1,6 @@
-from ._template import Layer, Optimiser, Loss, TrainableLayer, TrainingOnlyLayer
+from ._template import Layer, TrainableLayer, TrainingOnlyLayer
+from .branch import Branch
 from .agent import TrainingAgent, Agent
-import numpy as np
-from typing import Literal
 import os
 import pickle
 from copy import deepcopy
@@ -10,9 +9,9 @@ FILE_EXTENSION = 'ptd'
 
 
 class Sequential:
-    def __init__(self, layers: list[Layer] = None):
+    def __init__(self, layers=None):
         if layers is None:
-            self.layers: list[Layer] = []
+            self.layers = []
         else:
             self.layers = layers
 
@@ -20,19 +19,36 @@ class Sequential:
         self.loss = None
 
         self.prev_output_shape = None  # used in adding layers
+        self.is_branched = False
 
-    def add(self, layer: Layer):
-        """Add layer to list, init layer"""
+    def add(self, item):
+        """Add layer to list and init layer"""
 
-        # set input shape
-        if layer.input_shape is None:
-            assert self.prev_output_shape is not None, 'Input shape of first layer not specified'
-            layer.input_shape = self.prev_output_shape
+        assert not self.is_branched, 'Cannot add further layers after branch'
 
-        layer.init()
-        self.prev_output_shape = layer.output_shape
+        if isinstance(item, Layer):
+            # set input shape
+            if item.input_shape is None:
+                assert self.prev_output_shape is not None, 'Input shape of first layer not specified'
+                item.input_shape = self.prev_output_shape
 
-        self.layers.append(layer)
+            item.init()
+            self.prev_output_shape = item.output_shape
+
+        else:  # isinstance(item, Branch)
+            self.is_branched = True
+
+            for branch in item.branches:
+                prev_output_shape = self.prev_output_shape
+
+                for layer in branch:
+                    if layer.input_shape is None:
+                        layer.input_shape = prev_output_shape
+
+                    layer.init()
+                    prev_output_shape = layer.output_shape
+
+        self.layers.append(item)
 
     def summary(self):
         """Prints tabular summary of model"""
@@ -53,18 +69,30 @@ class Sequential:
 
         total_params = 0
         for layer in self.layers:
-            type_ = layer.display
+            if isinstance(layer, Branch):
+                if layer.active_branch is not None:
+                    for sub_layer in layer.branches[layer.active_branch]:
+                        type_ = sub_layer.display
+                        params = sub_layer.params
+                        total_params += params
+                        output_shape = (None, *sub_layer.output_shape)
 
-            params = layer.params
-            total_params += params
+                        print(f'{row_format.format(type_, str(output_shape), str(params))}\n')
+                else:
+                    print(f'{row_format.format("Branch", "None", "0")}\n')
+            else:
+                type_ = layer.display
+                params = layer.params
+                total_params += params
+                output_shape = (None, *layer.output_shape)
 
-            print(f'{row_format.format(type_, str((None, *layer.output_shape)), str(params))}\n')
+                print(f'{row_format.format(type_, str(output_shape), str(params))}\n')
 
         print(f'{separator2}\n'
               f'Total params: {total_params}\n'
               f'{separator1}\n')
 
-    def compile(self, optimiser: Optimiser, loss: Loss):
+    def compile(self, optimiser, loss=None):
         self.optimiser = optimiser
         self.loss = loss
 
@@ -72,31 +100,48 @@ class Sequential:
             if isinstance(layer, TrainableLayer):
                 layer.optimiser = self.optimiser
 
+    def get_loss_func(self):
+        if self.is_branched:
+            branch = self.layers[-1]
+            return branch.losses[branch.active_branch]
+        else:
+            return self.loss
+
     def predict(self, x):
-        for layer in self.layers:
+        for item in self.layers:
+            if isinstance(item, Branch):
+                x = item.predict(x)
+
             # ignore layer if training only
-            if not isinstance(layer, TrainingOnlyLayer):
-                x = layer.forward(x)
+            elif not isinstance(item, TrainingOnlyLayer):
+                x = item.forward(x)
+
         return x
 
     def forward_propagation(self, x):
         for layer in self.layers:
-            x = layer.forward(x)
+            if isinstance(layer, Branch):
+                x = layer.forward_propagation(x)
+            else:
+                x = layer.forward(x)
         return x
 
     def backward_propagation(self, y):
         for layer in reversed(self.layers):
-            y = layer.backward(y)
+            if isinstance(layer, Branch):
+                y = layer.backward_propagation(y)
+            else:
+                y = layer.backward(y)
         return y
 
-    def train_step(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
-        assert self.optimiser is not None and self.loss is not None, 'Model must be compiled before training'
+    def train_step(self, x, y):
+        assert self.optimiser is not None, 'Model must be compiled before training'
 
         # forward propagation
         y_pred = self.forward_propagation(x)
 
         # calculate error and error gradient
-        dY = self.loss.func_prime(y, y_pred)
+        dY = self.get_loss_func().func_prime(y, y_pred)
 
         # backward propagation
         self.backward_propagation(dY)
@@ -108,14 +153,14 @@ class Sequential:
 
     def fit(
             self,
-            x: np.ndarray,
-            y: np.ndarray,
-            batch_size: int = 1,
-            epochs: int = 1,
-            verbose: Literal[0, 1] = 1,
-            running_mean_size: int = 100,
-            save_filepath: str = None,
-            metrics: list[Literal['accuracy']] = None
+            x,
+            y,
+            batch_size=1,
+            epochs=1,
+            verbose=1,
+            running_mean_size=100,
+            save_filepath=None,
+            metrics=None
     ):
         """Train over batch data using agent"""
 
@@ -126,7 +171,7 @@ class Sequential:
         """Returns deep copy of self"""
         return deepcopy(self)
 
-    def save(self, filepath: str, verbose: Literal[0, 1] = 1):
+    def save(self, filepath, verbose=1):
         # handel file extension cases
         extension = os.path.splitext(filepath)[1]
         if extension == '':
@@ -145,7 +190,7 @@ class Sequential:
             print(f'Successfully saved file to {os.path.abspath(filepath)}')
 
     @classmethod
-    def load(cls, filepath: str, verbose: Literal[0, 1] = 1):
+    def load(cls, filepath, verbose=1):
         # handel file extension cases
         extension = os.path.splitext(filepath)[1]
         if extension == '':
