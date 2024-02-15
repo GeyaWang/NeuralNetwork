@@ -53,8 +53,6 @@ class Dense(TrainableLayer):
         return dX
 
     def init(self):
-        print(self.output_shape)
-
         # Init params
         kernel_shape = (self.input_shape[0], self.output_shape[0])
         bias_shape = self.output_shape[0]
