@@ -90,7 +90,7 @@ class TrainingAgent(Agent):
                 # statistics
                 self.time_list.append(t2 - t1)
                 time_mean = np.mean(self.time_list)
-                err = self.model.loss.func(y_true, y_pred)
+                err = self.model.get_loss_func().func(y_true, y_pred)
                 self.err_list.append(err)
 
                 if 'accuracy' in self.metrics:
